@@ -22,6 +22,6 @@ RUN cd apps/api && npm run build
 # Expose port
 EXPOSE 4000
 
-# Start the API
+# Start the API (migrations run at startup)
 WORKDIR /app/apps/api
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
