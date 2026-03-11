@@ -1,0 +1,116 @@
+import type { AuthProvider, UserRole } from '../../generated/prisma';
+export declare const userRepository: {
+    findByEmail(email: string): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+    findById(id: string): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+    findByGoogleId(googleId: string): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+    findByLinkedinId(linkedinId: string): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+    createUser(params: {
+        email: string;
+        passwordHash?: string;
+        role: UserRole;
+        firstName: string;
+        lastName: string;
+        googleId?: string;
+        linkedinId?: string;
+        authProvider?: AuthProvider;
+        avatarUrl?: string;
+        isEmailVerified?: boolean;
+    }): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    updateUser(id: string, data: {
+        googleId?: string;
+        linkedinId?: string;
+        avatarUrl?: string;
+        isEmailVerified?: boolean;
+    }): Promise<{
+        id: string;
+        email: string;
+        googleId: string | null;
+        linkedinId: string | null;
+        passwordHash: string | null;
+        role: import("../../generated/prisma").$Enums.UserRole;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        bio: string | null;
+        isEmailVerified: boolean;
+        authProvider: import("../../generated/prisma").$Enums.AuthProvider;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+};
+//# sourceMappingURL=userRepository.d.ts.map

@@ -32,10 +32,13 @@ function signRefreshToken(payload: object): string {
 }
 
 function setRefreshCookie(res: Response, refreshToken: string) {
+  const isProd = env.NODE_ENV === 'production'
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    // Needed for cross-site cookies (Vercel frontend -> Railway API) in production.
+    // Browsers require SameSite=None cookies to also be Secure.
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   })
 }
@@ -344,10 +347,11 @@ export const authService = {
 
   // ── Logout ───────────────────────────────────────────────
   logout(res: Response) {
+    const isProd = env.NODE_ENV === 'production'
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
     })
     return { message: 'Logged out' }
   },
