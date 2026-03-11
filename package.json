@@ -8,6 +8,8 @@
     "test": "turbo run test",
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:api": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api",
+    "start:api": "cd apps/api && npm start",
     "lint": "turbo run lint"
   },
   "keywords": [],
