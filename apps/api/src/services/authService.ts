@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt, { type SignOptions } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import type { Response } from 'express'
 import { z } from 'zod'
 import { userRepository } from '../repositories/userRepository'
@@ -20,17 +20,15 @@ const loginSchema = z.object({
 })
 
 function signAccessToken(payload: object): string {
-  const options: SignOptions = {
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-  }
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, options)
+  } as jwt.SignOptions)
 }
 
 function signRefreshToken(payload: object): string {
-  const options: SignOptions = {
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-  }
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, options)
+  } as jwt.SignOptions)
 }
 
 function setRefreshCookie(res: Response, refreshToken: string) {
