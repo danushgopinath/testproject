@@ -16,7 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@expertify/shared": "1.0.0",
+    "@expertify/shared": "file:../../packages/shared",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcryptjs": "^2.4.3",
