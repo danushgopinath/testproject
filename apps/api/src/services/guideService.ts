@@ -17,14 +17,23 @@ export const guideService = {
       50,
     )
 
-    const { items, nextCursor } = await guideRepository.findManyPublic({
+    const filters: {
+      take: number
+      cursor?: string
+      university?: string
+      specialization?: string
+      language?: string
+      search?: string
+    } = {
       take,
-      cursor: query.cursor,
-      university: query.university,
-      specialization: query.specialization,
-      language: query.language,
-      search: query.search,
-    })
+    }
+    if (query.cursor) filters.cursor = query.cursor
+    if (query.university) filters.university = query.university
+    if (query.specialization) filters.specialization = query.specialization
+    if (query.language) filters.language = query.language
+    if (query.search) filters.search = query.search
+
+    const { items, nextCursor } = await guideRepository.findManyPublic(filters)
 
     const guides = items.map((g) => ({
       id: g.id,

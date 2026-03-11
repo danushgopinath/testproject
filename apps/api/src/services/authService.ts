@@ -21,13 +21,13 @@ const loginSchema = z.object({
 
 function signAccessToken(payload: object) {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN as string,
   })
 }
 
 function signRefreshToken(payload: object) {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN as string,
   })
 }
 
@@ -147,23 +147,42 @@ export const authService = {
       user = await userRepository.findByEmail(payload.email)
       if (user) {
         // Link Google account to existing user
-        user = await userRepository.updateUser(user.id, {
+        const updateData: {
+          googleId: string
+          avatarUrl?: string
+          isEmailVerified: boolean
+        } = {
           googleId: payload.sub,
-          avatarUrl: user.avatarUrl ?? payload.picture ?? undefined,
           isEmailVerified: true,
-        })
+        }
+        if (user.avatarUrl ?? payload.picture) {
+          updateData.avatarUrl = user.avatarUrl ?? payload.picture
+        }
+        user = await userRepository.updateUser(user.id, updateData)
       } else {
         // Create new user
-        user = await userRepository.createUser({
+        const createData: {
+          email: string
+          firstName: string
+          lastName: string
+          role: 'SEEKER'
+          googleId: string
+          authProvider: 'GOOGLE'
+          avatarUrl?: string
+          isEmailVerified: boolean
+        } = {
           email: payload.email,
           firstName: payload.given_name ?? '',
           lastName: payload.family_name ?? '',
           role: 'SEEKER',
           googleId: payload.sub,
           authProvider: 'GOOGLE',
-          avatarUrl: payload.picture,
           isEmailVerified: true,
-        })
+        }
+        if (payload.picture) {
+          createData.avatarUrl = payload.picture
+        }
+        user = await userRepository.createUser(createData)
       }
     }
 
@@ -239,22 +258,41 @@ export const authService = {
     if (!user) {
       user = await userRepository.findByEmail(profile.email)
       if (user) {
-        user = await userRepository.updateUser(user.id, {
+        const updateData: {
+          linkedinId: string
+          avatarUrl?: string
+          isEmailVerified: boolean
+        } = {
           linkedinId: profile.sub,
-          avatarUrl: user.avatarUrl ?? profile.picture ?? undefined,
           isEmailVerified: true,
-        })
+        }
+        if (user.avatarUrl ?? profile.picture) {
+          updateData.avatarUrl = user.avatarUrl ?? profile.picture
+        }
+        user = await userRepository.updateUser(user.id, updateData)
       } else {
-        user = await userRepository.createUser({
+        const createData: {
+          email: string
+          firstName: string
+          lastName: string
+          role: 'SEEKER'
+          linkedinId: string
+          authProvider: 'LINKEDIN'
+          avatarUrl?: string
+          isEmailVerified: boolean
+        } = {
           email: profile.email,
           firstName: profile.given_name ?? '',
           lastName: profile.family_name ?? '',
           role: 'SEEKER',
           linkedinId: profile.sub,
           authProvider: 'LINKEDIN',
-          avatarUrl: profile.picture,
           isEmailVerified: true,
-        })
+        }
+        if (profile.picture) {
+          createData.avatarUrl = profile.picture
+        }
+        user = await userRepository.createUser(createData)
       }
     }
 

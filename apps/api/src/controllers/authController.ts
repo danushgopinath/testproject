@@ -38,6 +38,9 @@ export async function me(req: Request, res: Response) {
     throw new AuthError('Missing token', 401)
   }
   const token = authHeader.split(' ')[1]
+  if (!token) {
+    throw new AuthError('Missing token', 401)
+  }
   try {
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { sub: string }
     const result = await authService.me(decoded.sub)
