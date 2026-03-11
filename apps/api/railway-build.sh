@@ -1,15 +1,20 @@
 #!/bin/bash
 set -e
 
-echo "🔨 Building @expertify/shared package..."
-cd ../../packages/shared
+echo "📦 Installing dependencies from monorepo root..."
+cd ../..
 npm install
+
+echo "🔨 Building @expertify/shared package..."
+cd packages/shared
 npm run build
-cd ../../apps/api
+cd ../..
 
 echo "🔨 Building API..."
-npm install
+cd apps/api
 npm run build
+
+echo "🔧 Generating Prisma client..."
 npx prisma generate
 
 echo "✅ Build complete!"
