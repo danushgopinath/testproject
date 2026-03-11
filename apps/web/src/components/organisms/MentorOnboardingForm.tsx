@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ArrowRight, ArrowLeft, Upload, X, Check } from 'lucide-react'
-import { Button } from '../atoms/Button'
 
 interface MentorOnboardingData {
   // Step 1: Personal Details
