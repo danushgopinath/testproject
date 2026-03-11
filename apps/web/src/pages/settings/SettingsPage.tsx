@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 
 export function SettingsPage() {
-  const { user, logout } = useAuthStore()
+  const { logout } = useAuthStore()
   const navigate = useNavigate()
   const [darkMode, setDarkMode] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)

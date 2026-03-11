@@ -1,5 +1,5 @@
 import { useAuthStore } from '../stores/authStore'
-import { Mail, MapPin, Briefcase, GraduationCap, Calendar, Star, MessageSquare, Clock } from 'lucide-react'
+import { MapPin, Briefcase, GraduationCap, Calendar, Star, MessageSquare, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export function ProfilePage() {

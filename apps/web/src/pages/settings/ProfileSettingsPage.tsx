@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useAuthStore } from '../../stores/authStore'
-import { Mail, MapPin, Briefcase, GraduationCap, Save } from 'lucide-react'
-import { Button } from '../../components/atoms/Button'
+import { Mail, MapPin, Briefcase, GraduationCap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface ProfileFormData {

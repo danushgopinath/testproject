@@ -1,33 +1,40 @@
 import { z } from 'zod';
-export declare const userRoleSchema: z.ZodEnum<["SEEKER", "GUIDE", "ADMIN"]>;
-export declare const registerSchema: z.ZodObject<{
-    role: z.ZodEffects<z.ZodEnum<["SEEKER", "GUIDE", "ADMIN"]>, "SEEKER" | "GUIDE", "SEEKER" | "GUIDE" | "ADMIN">;
+export declare const userRoleSchema: z.ZodEnum<{
+    SEEKER: "SEEKER";
+    GUIDE: "GUIDE";
+    ADMIN: "ADMIN";
+}>;
+declare const registerSchemaBase: z.ZodObject<{
+    role: z.ZodEnum<{
+        SEEKER: "SEEKER";
+        GUIDE: "GUIDE";
+        ADMIN: "ADMIN";
+    }> & z.ZodType<"SEEKER" | "GUIDE", "SEEKER" | "GUIDE" | "ADMIN", z.core.$ZodTypeInternals<"SEEKER" | "GUIDE", "SEEKER" | "GUIDE" | "ADMIN">>;
     firstName: z.ZodString;
     lastName: z.ZodString;
     email: z.ZodString;
     password: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    role: "SEEKER" | "GUIDE";
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-}, {
-    role: "SEEKER" | "GUIDE" | "ADMIN";
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-}>;
+    confirmPassword: z.ZodString;
+}, z.core.$strip>;
+export declare const registerSchema: z.ZodObject<{
+    role: z.ZodEnum<{
+        SEEKER: "SEEKER";
+        GUIDE: "GUIDE";
+        ADMIN: "ADMIN";
+    }> & z.ZodType<"SEEKER" | "GUIDE", "SEEKER" | "GUIDE" | "ADMIN", z.core.$ZodTypeInternals<"SEEKER" | "GUIDE", "SEEKER" | "GUIDE" | "ADMIN">>;
+    firstName: z.ZodString;
+    lastName: z.ZodString;
+    email: z.ZodString;
+    password: z.ZodString;
+    confirmPassword: z.ZodString;
+}, z.core.$strip>;
 export declare const loginSchema: z.ZodObject<{
     email: z.ZodString;
     password: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    email: string;
+}, z.core.$strip>;
+export type RegisterInput = Omit<z.infer<typeof registerSchemaBase>, 'confirmPassword'> & {
     password: string;
-}, {
-    email: string;
-    password: string;
-}>;
-export type RegisterInput = z.infer<typeof registerSchema>;
+};
+export type RegisterFormInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export {};

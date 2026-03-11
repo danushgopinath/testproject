@@ -158,10 +158,6 @@ export function GuidesPage() {
   const startIdx = sortedMentors.length === 0 ? 0 : (currentPage - 1) * MENTORS_PER_PAGE + 1
   const endIdx = Math.min(currentPage * MENTORS_PER_PAGE, sortedMentors.length)
 
-  const scrollToTopOfList = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
   return (
     <div className="flex flex-col">
       {/* Page Header — scrolls away */}

@@ -12,26 +12,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undef
 const LINKEDIN_CLIENT_ID = import.meta.env.VITE_LINKEDIN_CLIENT_ID as string | undefined
 const LINKEDIN_REDIRECT_URI = import.meta.env.VITE_LINKEDIN_REDIRECT_URI as string | undefined
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string
-            callback: (response: { credential: string }) => void
-          }) => void
-          renderButton: (
-            element: HTMLElement,
-            config: { theme?: string; size?: string; text?: string; width?: string }
-          ) => void
-          prompt: () => void
-        }
-      }
-    }
-  }
-}
-
 export function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
