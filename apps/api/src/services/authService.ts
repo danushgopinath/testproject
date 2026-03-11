@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { type SignOptions } from 'jsonwebtoken'
 import type { Response } from 'express'
 import { z } from 'zod'
 import { userRepository } from '../repositories/userRepository'
@@ -19,16 +19,18 @@ const loginSchema = z.object({
   password: z.string().min(8),
 })
 
-function signAccessToken(payload: object) {
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN as string,
-  })
+function signAccessToken(payload: object): string {
+  const options: SignOptions = {
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+  }
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, options)
 }
 
-function signRefreshToken(payload: object) {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRES_IN as string,
-  })
+function signRefreshToken(payload: object): string {
+  const options: SignOptions = {
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+  }
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, options)
 }
 
 function setRefreshCookie(res: Response, refreshToken: string) {
@@ -155,8 +157,9 @@ export const authService = {
           googleId: payload.sub,
           isEmailVerified: true,
         }
-        if (user.avatarUrl ?? payload.picture) {
-          updateData.avatarUrl = user.avatarUrl ?? payload.picture
+        const avatarUrl = user.avatarUrl ?? payload.picture
+        if (avatarUrl) {
+          updateData.avatarUrl = avatarUrl
         }
         user = await userRepository.updateUser(user.id, updateData)
       } else {
@@ -266,8 +269,9 @@ export const authService = {
           linkedinId: profile.sub,
           isEmailVerified: true,
         }
-        if (user.avatarUrl ?? profile.picture) {
-          updateData.avatarUrl = user.avatarUrl ?? profile.picture
+        const avatarUrl = user.avatarUrl ?? profile.picture
+        if (avatarUrl) {
+          updateData.avatarUrl = avatarUrl
         }
         user = await userRepository.updateUser(user.id, updateData)
       } else {
