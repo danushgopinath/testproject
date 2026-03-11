@@ -95,16 +95,6 @@ export function Layout({ children }: LayoutProps) {
             >
               Contact
             </NavLink>
-            <NavLink
-              to="/career"
-              className={({ isActive }) =>
-                isActive
-                  ? 'text-text-primary font-semibold'
-                  : 'hover:text-text-primary transition-colors'
-              }
-            >
-              Career
-            </NavLink>
           </nav>
 
           <div className="flex items-center gap-4">

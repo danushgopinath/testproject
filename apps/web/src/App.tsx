@@ -17,7 +17,6 @@ import { BookSessionPage } from './pages/BookSessionPage'
 import { AboutPage } from './pages/AboutPage'
 import { TeamPage } from './pages/TeamPage'
 import { ContactPage } from './pages/ContactPage'
-import { CareerPage } from './pages/CareerPage'
 import { useAuthStore } from './stores/authStore'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -79,7 +78,6 @@ export function App() {
         <Route path="/guides/:id/book" element={<BookSessionPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/career" element={<CareerPage />} />
 
         {/* Auth routes — redirect to dashboard if already logged in */}
         <Route path="/auth/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
