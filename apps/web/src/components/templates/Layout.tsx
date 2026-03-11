@@ -56,6 +56,16 @@ export function Layout({ children }: LayoutProps) {
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-text-muted md:flex">
             <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-text-primary font-semibold'
+                  : 'hover:text-text-primary transition-colors'
+              }
+            >
+              About
+            </NavLink>
+            <NavLink
               to="/guides"
               className={({ isActive }) =>
                 isActive
@@ -66,14 +76,24 @@ export function Layout({ children }: LayoutProps) {
               Find Mentors
             </NavLink>
             <NavLink
-              to="/auth/signup"
+              to="/team"
               className={({ isActive }) =>
                 isActive
                   ? 'text-text-primary font-semibold'
                   : 'hover:text-text-primary transition-colors'
               }
             >
-              Become a Mentor
+              Team
+            </NavLink>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-text-primary font-semibold'
+                  : 'hover:text-text-primary transition-colors'
+              }
+            >
+              Contact
             </NavLink>
           </nav>
 
@@ -197,7 +217,7 @@ export function Layout({ children }: LayoutProps) {
               <h4 className="text-sm font-semibold text-text-primary">Platform</h4>
               <ul className="space-y-3 text-sm">
                 <li><Link to="/guides" className="hover:text-text-primary transition-colors">Find Mentors</Link></li>
-                <li><Link to="/auth/signup" className="hover:text-text-primary transition-colors">Become a Mentor</Link></li>
+                <li><Link to="/about" className="hover:text-text-primary transition-colors">About</Link></li>
                 <li><button className="hover:text-text-primary transition-colors">Pricing</button></li>
               </ul>
             </div>
@@ -217,7 +237,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-text-primary">Company</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link to="/" className="hover:text-text-primary transition-colors">About</Link></li>
+                <li><Link to="/about" className="hover:text-text-primary transition-colors">About</Link></li>
                 <li><button className="hover:text-text-primary transition-colors">Careers</button></li>
                 <li><button className="hover:text-text-primary transition-colors">Privacy</button></li>
                 <li><button className="hover:text-text-primary transition-colors">Terms</button></li>

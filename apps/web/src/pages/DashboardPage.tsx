@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, GraduationCap, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
 export function DashboardPage() {
-  const { user, dashboardRole } = useAuthStore()
+  const { user, dashboardRole, setDashboardRole } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
 
   const [showAvailability, setShowAvailability] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
@@ -65,6 +68,31 @@ export function DashboardPage() {
 
   const activeRole: DashboardRole =
     (dashboardRole as DashboardRole | null) || ((user?.role as DashboardRole | undefined) ?? 'SEEKER')
+
+  // Check if mentor onboarding is complete
+  useEffect(() => {
+    const completed = localStorage.getItem('mentorOnboardingComplete') === 'true'
+    setIsOnboardingComplete(completed)
+    
+    // Auto-toggle to mentor mode if coming from "Become a Mentor"
+    const becomeMentor = searchParams.get('becomeMentor') === 'true' || sessionStorage.getItem('becomeMentor') === 'true'
+    if (becomeMentor && dashboardRole !== 'GUIDE') {
+      setDashboardRole('GUIDE')
+      // Clear the flag
+      sessionStorage.removeItem('becomeMentor')
+      searchParams.delete('becomeMentor')
+    }
+  }, [searchParams, dashboardRole, setDashboardRole])
+
+  const handleOnboardingComplete = () => {
+    setIsOnboardingComplete(true)
+    localStorage.setItem('mentorOnboardingComplete', 'true')
+  }
+
+  // Show onboarding form if user is in mentor mode and hasn't completed onboarding
+  if (activeRole === 'GUIDE' && !isOnboardingComplete) {
+    return <MentorOnboardingForm onComplete={handleOnboardingComplete} />
+  }
 
   // Mock data - replace with real data from API
   const seekerStats = {

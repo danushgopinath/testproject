@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '../../components/atoms/Button'
@@ -14,10 +14,12 @@ const LINKEDIN_REDIRECT_URI = import.meta.env.VITE_LINKEDIN_REDIRECT_URI as stri
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const { login, googleLogin, isLoading } = useAuthStore()
   const googleButtonRef = useRef<HTMLDivElement>(null)
+  const becomeMentor = searchParams.get('becomeMentor') === 'true' || sessionStorage.getItem('becomeMentor') === 'true'
   const {
     register,
     handleSubmit,
@@ -34,7 +36,7 @@ export function LoginPage() {
     setApiError(null)
     try {
       await login(values)
-      navigate('/dashboard')
+      navigate(becomeMentor ? '/dashboard?becomeMentor=true' : '/dashboard')
     } catch (err) {
       if (err instanceof AxiosError) {
         setApiError(err.response?.data?.message ?? 'Login failed. Please try again.')
@@ -55,7 +57,7 @@ export function LoginPage() {
             setApiError(null)
             try {
               await googleLogin(response.credential)
-              navigate('/dashboard')
+              navigate(becomeMentor ? '/dashboard?becomeMentor=true' : '/dashboard')
             } catch (err) {
               if (err instanceof AxiosError) {
                 setApiError(err.response?.data?.message ?? 'Google login failed.')

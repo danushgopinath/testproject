@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight, Star, CheckCircle, Shield, Globe } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Star, CheckCircle, Shield, Globe, Target, Users, Heart } from 'lucide-react'
 import { Button } from '../components/atoms/Button'
+import { useAuthStore } from '../stores/authStore'
 
 const stats = [
   { label: 'Active Students', value: '10,000+' },
@@ -52,6 +53,19 @@ function TestimonialCard({ t }: { t: (typeof testimonials)[number] }) {
 }
 
 export function LandingPage() {
+  const { user } = useAuthStore()
+  const navigate = useNavigate()
+
+  const handleBecomeMentor = () => {
+    // Store flag that user wants to become a mentor
+    sessionStorage.setItem('becomeMentor', 'true')
+    if (user) {
+      navigate('/dashboard?becomeMentor=true')
+    } else {
+      navigate('/auth/login?becomeMentor=true')
+    }
+  }
+
   return (
     <div className="w-full">
       {/* Hero */}
@@ -80,11 +94,14 @@ export function LandingPage() {
                 </span>
               </Button>
             </Link>
-            <Link to="/auth/signup">
-              <Button variant="secondary" size="lg" className="h-14 px-10 text-lg font-semibold">
-                Become a Mentor
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="h-14 px-10 text-lg font-semibold"
+              onClick={handleBecomeMentor}
+            >
+              Become a Mentor
+            </Button>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-8 pt-4 text-sm text-text-muted md:text-base">
             <div className="flex items-center gap-2">
@@ -112,6 +129,145 @@ export function LandingPage() {
               <p className="text-sm text-text-muted md:text-base">{stat.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Our Mission Section */}
+      <section className="w-full border-y border-border bg-background px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+                <Target className="h-4 w-4" />
+                Our Mission
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl md:text-5xl">
+                Empowering Students Through Expert Guidance
+              </h2>
+              <div className="space-y-4 text-base leading-relaxed text-text-muted md:text-lg">
+                <p>
+                  At Expertify, we believe that every student deserves access to personalized guidance from
+                  experienced professionals who have walked their path. Our platform bridges the gap between
+                  ambitious students and accomplished mentors, creating meaningful connections that drive success.
+                </p>
+                <p>
+                  Whether you're applying to top universities, preparing for interviews, or navigating career
+                  transitions, Expertify connects you with mentors who can provide the insights and support you need.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center lg:justify-end">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 to-accent/20 blur-3xl" />
+                <div className="relative flex h-80 w-80 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+                  <Target className="h-40 w-40 text-primary" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Values Section */}
+      <section className="w-full border-y border-border bg-surface/30 px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
+              <Heart className="h-4 w-4" />
+              Our Values
+            </div>
+            <h2 className="mt-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl md:text-5xl">
+              What We Stand For
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-text-muted md:text-lg">
+              The principles that guide everything we do at Expertify
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="group rounded-2xl border border-border bg-surface p-8 shadow-sm transition-all hover:shadow-lg hover:border-primary/30">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <Users className="h-7 w-7" />
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Community</h3>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Building a supportive network of students and mentors who learn and grow together.
+              </p>
+            </div>
+            <div className="group rounded-2xl border border-border bg-surface p-8 shadow-sm transition-all hover:shadow-lg hover:border-primary/30">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <Heart className="h-7 w-7" />
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Empathy</h3>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Understanding the challenges students face and providing compassionate, personalized support.
+              </p>
+            </div>
+            <div className="group rounded-2xl border border-border bg-surface p-8 shadow-sm transition-all hover:shadow-lg hover:border-primary/30">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <Target className="h-7 w-7" />
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Excellence</h3>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Maintaining high standards in mentorship quality and student outcomes.
+              </p>
+            </div>
+            <div className="group rounded-2xl border border-border bg-surface p-8 shadow-sm transition-all hover:shadow-lg hover:border-primary/30">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                <Shield className="h-7 w-7" />
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Trust</h3>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Creating a safe, secure platform where students and mentors can connect with confidence.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="w-full border-y border-border bg-background px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+              <ArrowRight className="h-4 w-4" />
+              How It Works
+            </div>
+            <h2 className="mt-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl md:text-5xl">
+              Get Started in Three Simple Steps
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-text-muted md:text-lg">
+              Your journey to expert guidance starts here
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="group relative text-center">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-2xl font-bold text-white shadow-lg transition-transform group-hover:scale-110 group-hover:shadow-xl">
+                1
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Find Your Mentor</h3>
+              <p className="text-sm leading-relaxed text-text-muted md:text-base">
+                Browse our directory of expert mentors from top universities and companies worldwide. Filter by expertise, availability, and ratings.
+              </p>
+            </div>
+            <div className="group relative text-center">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-2xl font-bold text-white shadow-lg transition-transform group-hover:scale-110 group-hover:shadow-xl">
+                2
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Book a Session</h3>
+              <p className="text-sm leading-relaxed text-text-muted md:text-base">
+                Schedule a one-on-one session at a time that works for you. Choose from various session types and durations that fit your needs.
+              </p>
+            </div>
+            <div className="group relative text-center">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-2xl font-bold text-white shadow-lg transition-transform group-hover:scale-110 group-hover:shadow-xl">
+                3
+              </div>
+              <h3 className="mb-3 text-xl font-semibold text-text-primary">Get Guidance</h3>
+              <p className="text-sm leading-relaxed text-text-muted md:text-base">
+                Connect with your mentor, get personalized advice, and accelerate your journey to success. Follow up with additional sessions as needed.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

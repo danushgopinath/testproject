@@ -14,6 +14,9 @@ import { ProfileSettingsPage } from './pages/settings/ProfileSettingsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BookSessionPage } from './pages/BookSessionPage'
+import { AboutPage } from './pages/AboutPage'
+import { TeamPage } from './pages/TeamPage'
+import { ContactPage } from './pages/ContactPage'
 import { useAuthStore } from './stores/authStore'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -69,9 +72,12 @@ export function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/guides/:id" element={<GuideProfilePage />} />
         <Route path="/guides/:id/book" element={<BookSessionPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Auth routes — redirect to dashboard if already logged in */}
         <Route path="/auth/login" element={<GuestRoute><LoginPage /></GuestRoute>} />

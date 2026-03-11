@@ -34,7 +34,8 @@ export function LinkedInCallbackPage() {
 
     linkedinLogin(code)
       .then(() => {
-        navigate('/dashboard', { replace: true })
+        const becomeMentor = sessionStorage.getItem('becomeMentor') === 'true'
+        navigate(becomeMentor ? '/dashboard?becomeMentor=true' : '/dashboard', { replace: true })
       })
       .catch((err) => {
         console.error('LinkedIn login error:', err)
