@@ -115,14 +115,20 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
   }
 
   const removeTimeSlot = (day: string, time: string) => {
-    const slots = formData.availability.timeSlots[day]?.filter((t) => t !== time) || []
+    const slots = (formData.availability.timeSlots[day] ?? []).filter((t) => t !== time)
+
+    const nextTimeSlots: Record<string, string[]> =
+      slots.length > 0
+        ? { ...formData.availability.timeSlots, [day]: slots }
+        : (() => {
+            const { [day]: _removed, ...rest } = formData.availability.timeSlots
+            return rest
+          })()
+
     updateFormData({
       availability: {
         ...formData.availability,
-        timeSlots: {
-          ...formData.availability.timeSlots,
-          [day]: slots.length > 0 ? slots : undefined,
-        },
+        timeSlots: nextTimeSlots,
       },
     })
   }
