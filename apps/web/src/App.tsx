@@ -17,6 +17,13 @@ import { BookSessionPage } from './pages/BookSessionPage'
 import { AboutPage } from './pages/AboutPage'
 import { TeamPage } from './pages/TeamPage'
 import { ContactPage } from './pages/ContactPage'
+import { RequestsPage } from './pages/RequestsPage'
+import { SpendingAnalyticsPage } from './pages/analytics/SpendingAnalyticsPage'
+import { MentorsAnalyticsPage } from './pages/analytics/MentorsAnalyticsPage'
+import { SessionHistoryPage } from './pages/analytics/SessionHistoryPage'
+import { EarningsAnalyticsPage } from './pages/analytics/EarningsAnalyticsPage'
+import { StudentsAnalyticsPage } from './pages/analytics/StudentsAnalyticsPage'
+import { PerformanceAnalyticsPage } from './pages/analytics/PerformanceAnalyticsPage'
 import { useAuthStore } from './stores/authStore'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -75,7 +82,14 @@ export function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/guides/:id" element={<GuideProfilePage />} />
-        <Route path="/guides/:id/book" element={<BookSessionPage />} />
+        <Route
+          path="/guides/:id/book"
+          element={
+            <ProtectedRoute>
+              <BookSessionPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/contact" element={<ContactPage />} />
 
@@ -86,6 +100,13 @@ export function App() {
 
         {/* Protected routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/dashboard/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/spending" element={<ProtectedRoute><SpendingAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/mentors" element={<ProtectedRoute><MentorsAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/sessions" element={<ProtectedRoute><SessionHistoryPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/earnings" element={<ProtectedRoute><EarningsAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/students" element={<ProtectedRoute><StudentsAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/analytics/performance" element={<ProtectedRoute><PerformanceAnalyticsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/sessions" element={<ProtectedRoute><SessionsPage /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />

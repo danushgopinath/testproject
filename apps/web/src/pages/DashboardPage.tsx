@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, GraduationCap, X } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
+import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
@@ -283,8 +284,14 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
-      {/* Welcome Section */}
+    <div className="flex w-full">
+      {/* Sidebar */}
+      <DashboardSidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
+          {/* Welcome Section */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-text-primary">
@@ -732,6 +739,8 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

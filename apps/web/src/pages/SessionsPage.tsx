@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Calendar, Clock, Video, Search, ArrowLeft } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 
 type SessionStatus = 'upcoming' | 'past'
 
@@ -104,7 +105,10 @@ export function SessionsPage() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
+    <div className="flex w-full">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <Link
@@ -221,6 +225,8 @@ export function SessionsPage() {
             No {tab === 'upcoming' ? 'upcoming' : 'past'} sessions match your search.
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   )

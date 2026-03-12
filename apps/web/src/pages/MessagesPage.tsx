@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search, MoreVertical, ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 
 interface Conversation {
   id: number
@@ -124,7 +125,10 @@ export function MessagesPage() {
   const messages = MESSAGES_BY_CONVERSATION[activeConversation.id] || []
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
+    <div className="flex w-full">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <Link
@@ -313,6 +317,8 @@ export function MessagesPage() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>
