@@ -1,0 +1,12 @@
+[variables]
+NODE_VERSION = "20.19.0"
+
+[phases.install]
+cmds = [
+  "npm install",
+  "npm run build --workspace=packages/shared",
+  "cd apps/api && npm run build"
+]
+
+[start]
+cmd = "cd apps/api && npm start"

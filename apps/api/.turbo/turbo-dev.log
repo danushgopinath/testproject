@@ -1,0 +1,7 @@
+
+
+> api@1.0.0 dev
+> TS_NODE_DEV=true ts-node-dev --respawn --transpile-only src/server.ts
+
+[[36mINFO[0m] [30;1m16:41:13[0m ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.3)
+2026-03-07T21:41:13.906Z [32minfo[39m: API listening on port 4000

@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String?
+  role            UserRole
+  firstName       String
+  lastName        String
+  avatarUrl       String?   @db.Text
+  bio             String?   @db.Text
+  isEmailVerified Boolean   @default(false)
+  googleId        String?   @unique
+  linkedinId      String?   @unique
+  authProvider    AuthProvider @default(EMAIL)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  guideProfile     GuideProfile?
+  seekerProfile    SeekerProfile?
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  reviews          Review[]  @relation("UserReviews")
+}
+
+model GuideProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  headline        String
+  currentRole     String
+  currentCompany  String?
+  university      String?
+  graduationYear  Int?
+  programs        String[]  @default([])
+  specializations String[]  @default([])
+  languages       String[]  @default([])
+  sessionRate     Int?      // stored in cents; null = free
+  availability    Json?
+  isApproved      Boolean   @default(false)
+  totalSessions   Int       @default(0)
+  averageRating   Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  journeys        Journey[]
+  sessionsAsGuide Session[]   @relation("GuideSessions")
+  reviews         Review[]    @relation("GuideReviews")
+}
+
+model SeekerProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  currentStatus      SeekerStatus
+  targetUniversities String[] @default([])
+  targetPrograms     String[] @default([])
+  targetRoles        String[] @default([])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User          @relation(fields: [userId], references: [id])
+  sessionsAsSeeker   Session[]     @relation("SeekerSessions")
+}
+
+model Journey {
+  id             String       @id @default(uuid())
+  guideProfileId String
+  type           JourneyType
+  title          String
+  institution    String
+  year           Int
+  description    String       @db.Text
+  outcomes       String[]     @default([])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  guideProfile   GuideProfile @relation(fields: [guideProfileId], references: [id])
+}
+
+model Session {
+  id              String        @id @default(uuid())
+  seekerId        String
+  guideId         String
+  status          SessionStatus @default(PENDING)
+  scheduledAt     DateTime
+  durationMinutes Int
+  topic           String
+  notes           String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  seeker          SeekerProfile @relation("SeekerSessions", fields: [seekerId], references: [id])
+  guide           GuideProfile  @relation("GuideSessions", fields: [guideId], references: [id])
+  review          Review?
+  messages        Message[]
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  sessionId  String   @unique
+  reviewerId String
+  rating     Int
+  comment    String?  @db.Text
+  isPublic   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  guideId    String?
+
+  session    Session       @relation(fields: [sessionId], references: [id])
+  reviewer   User          @relation("UserReviews", fields: [reviewerId], references: [id])
+  guide      GuideProfile? @relation("GuideReviews", fields: [guideId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  sessionId  String?
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  session    Session? @relation(fields: [sessionId], references: [id])
+}
+
+enum UserRole {
+  SEEKER
+  GUIDE
+  ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  LINKEDIN
+}
+
+enum SeekerStatus {
+  STUDENT
+  RECENT_GRAD
+  EARLY_CAREER
+}
+
+enum JourneyType {
+  UNIVERSITY_APP
+  INTERNSHIP
+  JOB
+  PROGRAM
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
