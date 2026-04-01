@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calendar, Star, Clock, Globe, GraduationCap, MapPin } from 'lucide-react'
+import { ArrowLeft, Calendar, Star, Globe, GraduationCap, MapPin } from 'lucide-react'
 import { Button } from '../components/atoms/Button'
 import { useGuide } from '../hooks/useGuides'
 

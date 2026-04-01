@@ -74,7 +74,7 @@ export function LoginPage() {
           theme: 'outline',
           size: 'large',
           text: 'signin_with',
-          width: 220,
+          width: '220',
         })
       }
     }

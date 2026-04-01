@@ -119,7 +119,7 @@ export function SignupPage() {
           theme: 'outline',
           size: 'large',
           text: 'signup_with',
-          width: 220,
+          width: '220',
         })
       }
     }
