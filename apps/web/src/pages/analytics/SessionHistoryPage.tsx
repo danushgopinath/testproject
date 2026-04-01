@@ -1,4 +1,3 @@
-import { Calendar, Clock, DollarSign } from 'lucide-react'
 import { DashboardSidebar } from '../../components/organisms/DashboardSidebar'
 
 export function SessionHistoryPage() {

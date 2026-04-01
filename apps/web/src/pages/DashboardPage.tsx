@@ -4,14 +4,16 @@ import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, G
 import { Link, useSearchParams } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
+import { useGuideDashboard, useSeekerDashboard } from '../hooks/useDashboard'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
 export function DashboardPage() {
   const { user, dashboardRole, setDashboardRole } = useAuthStore()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showAvailability, setShowAvailability] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [dayTimes, setDayTimes] = useState<Record<string, string[]>>({})
@@ -82,6 +84,7 @@ export function DashboardPage() {
       // Clear the flag
       sessionStorage.removeItem('becomeMentor')
       searchParams.delete('becomeMentor')
+      setSearchParams(searchParams, { replace: true })
     }
   }, [searchParams, dashboardRole, setDashboardRole])
 
@@ -95,175 +98,92 @@ export function DashboardPage() {
     return <MentorOnboardingForm onComplete={handleOnboardingComplete} />
   }
 
-  // Mock data - replace with real data from API
-  const seekerStats = {
-    upcomingSessions: 3,
-    messages: 7,
-    guidesConnected: 12,
-    sessionsCompleted: 8,
+  const { data: seekerDashboard, isLoading: isSeekerLoading } = useSeekerDashboard(
+    Boolean(user) && activeRole === 'SEEKER',
+  )
+
+  const { data: guideDashboard, isLoading: isGuideLoading } = useGuideDashboard(
+    Boolean(user) && activeRole === 'GUIDE',
+  )
+
+  const seekerStats = seekerDashboard?.stats ?? {
+    upcomingSessions: 0,
+    unreadMessages: 0,
+    guidesConnected: 0,
+    sessionsCompleted: 0,
   }
 
-  const guideStats = {
-    upcomingSessions: 5,
-    pendingRequests: 3,
-    monthlyEarnings: 420,
-    avgRating: 4.9,
+  const guideStats = guideDashboard?.stats ?? {
+    upcomingSessions: 0,
+    pendingRequests: 0,
+    monthlyEarnings: 0,
+    avgRating: null as number | null,
   }
 
-  const recentMessages = [
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      initials: 'SC',
-      time: '2 min ago',
-      message: "Looking forward to our session today! I've prepared some resources on PM...",
-      unread: true,
-    },
-    {
-      id: 2,
-      name: 'Marcus Johnson',
-      initials: 'MJ',
-      time: '1 hour ago',
-      message: "Great question about system design! Here's a link to a resource I mentioned...",
-      unread: true,
-    },
-    {
-      id: 3,
-      name: 'Alex Kim',
-      initials: 'AK',
-      time: '3 hours ago',
-      message: "Thanks for booking! I saw your profile and think I can definitely help with you...",
-      unread: false,
-    },
-    {
-      id: 4,
-      name: 'Emily Rodriguez',
-      initials: 'ER',
-      time: 'Yesterday',
-      message: 'Just sent over the interview prep guide we discussed. Let me know if you hav...',
-      unread: false,
-    },
-  ]
+  const recentMessages =
+    activeRole === 'SEEKER'
+      ? seekerDashboard?.recentMessages ?? []
+      : guideDashboard?.recentMessages ?? []
 
-  const seekerUpcomingSessions = [
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      initials: 'SC',
-      role: 'Product Manager @ Google',
-      topic: 'Breaking into PM roles at FAANG',
-      date: 'Today',
-      time: '3:00 PM',
-      duration: '45 min',
-      status: 'starting_soon',
-      action: 'Join',
-    },
-    {
-      id: 2,
-      name: 'Marcus Johnson',
-      initials: 'MJ',
-      role: 'Software Engineer @ Meta',
-      topic: 'Technical interview preparation',
-      date: 'Tomorrow',
-      time: '10:00 AM',
-      duration: '60 min',
-      status: 'confirmed',
-      action: 'View Details',
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      initials: 'ER',
-      role: 'Investment Banking Analyst @ Goldman S...',
-      topic: 'Finance internship application strategy',
-      date: 'Mar 12',
-      time: '2:30 PM',
-      duration: '30 min',
-      status: 'pending',
-      action: 'View Details',
-    },
-  ]
+  const seekerUpcomingSessions =
+    seekerDashboard?.upcomingSessions?.map((s) => {
+      const dt = new Date(s.scheduledAt)
+      const dateLabel = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      const timeLabel = dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      const status = s.status === 'CONFIRMED' ? 'confirmed' : 'pending'
+      return {
+        id: s.id,
+        name: s.name,
+        initials: s.initials,
+        role: s.headline,
+        topic: s.topic,
+        date: dateLabel,
+        time: timeLabel,
+        duration: `${s.durationMinutes} min`,
+        status,
+        action: s.status === 'CONFIRMED' ? 'Join' : 'View Details',
+      }
+    }) ?? []
 
-  const guideUpcomingSessions = [
-    {
-      id: 1,
-      name: 'Michael Torres',
-      initials: 'MT',
-      role: 'Undergraduate Student',
-      topic: 'Transitioning from engineering to product',
-      date: 'Today',
-      time: '4:30 PM',
-      duration: '45 min',
-      status: 'starting_soon',
-      action: 'Join',
-    },
-    {
-      id: 2,
-      name: 'Rachel Kim',
-      initials: 'RK',
-      role: 'Graduate Student',
-      topic: 'MBA application essay review',
-      date: 'Tomorrow',
-      time: '11:00 AM',
-      duration: '30 min',
-      status: 'confirmed',
-      action: 'View Details',
-    },
-    {
-      id: 3,
-      name: 'James Wilson',
-      initials: 'JW',
-      role: 'Career Changer',
-      topic: 'Breaking into tech from non-traditional backgro...',
-      date: 'Mar 13',
-      time: '1:00 PM',
-      duration: '60 min',
-      status: 'pending',
-      action: 'Accept',
-    },
-  ]
+  const guideUpcomingSessions =
+    guideDashboard?.upcomingSessions?.map((s) => {
+      const dt = new Date(s.scheduledAt)
+      const dateLabel = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      const timeLabel = dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      const status = s.status === 'CONFIRMED' ? 'confirmed' : 'pending'
+      return {
+        id: s.id,
+        name: s.name,
+        initials: s.initials,
+        role: s.role,
+        topic: s.topic,
+        date: dateLabel,
+        time: timeLabel,
+        duration: `${s.durationMinutes} min`,
+        status,
+        action: s.status === 'CONFIRMED' ? 'Join' : 'View Details',
+      }
+    }) ?? []
 
-  const guideSessionRequests = [
-    {
-      id: 1,
-      name: 'Amanda Foster',
-      initials: 'AF',
-      role: 'Junior',
-      school: 'NYU Stern',
-      topic: 'Consulting recruiting timeline and strategies',
-      message: "Hi Diana! I'm really interested in learning about your journey into consulting. Would love to discuss...",
-      date: 'Mar 15, 2026',
-      time: '2:00 PM',
-      duration: '45 min',
-      timeAgo: '2 hours ago',
-    },
-    {
-      id: 2,
-      name: 'David Park',
-      initials: 'DP',
-      role: 'Senior',
-      school: 'Carnegie Mellon',
-      topic: 'Breaking into product management from CS',
-      message: "I saw that you made a similar transition and would appreciate your insights on...",
-      date: 'Mar 16, 2026',
-      time: '11:00 AM',
-      duration: '30 min',
-      timeAgo: '5 hours ago',
-    },
-    {
-      id: 3,
-      name: 'Sophie Chen',
-      initials: 'SC',
-      role: 'Graduate Student',
-      school: 'University of Michigan',
-      topic: 'MBA application strategy and essay review',
-      message: "I'm applying to top MBA programs this fall and would love guidance on my application strategy...",
-      date: 'Mar 18, 2026',
-      time: '4:00 PM',
-      duration: '60 min',
-      timeAgo: '1 day ago',
-    },
-  ]
+  const guideSessionRequests =
+    guideDashboard?.pendingRequests?.map((s) => {
+      const dt = new Date(s.scheduledAt)
+      const dateLabel = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      const timeLabel = dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      return {
+        id: s.id,
+        name: s.name,
+        initials: s.initials,
+        role: 'Seeker',
+        school: '—',
+        topic: s.topic,
+        message: 'New session request',
+        date: dateLabel,
+        time: timeLabel,
+        duration: `${s.durationMinutes} min`,
+        timeAgo: '—',
+      }
+    }) ?? []
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -285,7 +205,22 @@ export function DashboardPage() {
 
   return (
     <div className="flex w-full">
-      {/* Sidebar */}
+      {/* Mobile sidebar drawer */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setSidebarOpen(false)}
+          />
+          {/* Sidebar panel */}
+          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl transform transition-transform">
+            <DashboardSidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
       <DashboardSidebar />
 
       {/* Main Content */}
@@ -293,8 +228,20 @@ export function DashboardPage() {
         <div className="mx-auto w-full max-w-7xl px-6 py-8 md:px-8">
           {/* Welcome Section */}
       <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Hamburger — mobile only */}
+          <button
+            type="button"
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-border text-text-muted hover:text-text-primary hover:bg-background transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-primary">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-text-primary">
             Welcome back, {user?.firstName}
       </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -302,6 +249,7 @@ export function DashboardPage() {
               ? 'Your home base for upcoming sessions, recommended guides, and recent messages.'
               : 'Manage your sessions, track your earnings, and connect with seekers.'}
           </p>
+        </div>
         </div>
         {activeRole === 'GUIDE' && (
           <button
@@ -316,14 +264,16 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {activeRole === 'SEEKER' ? (
           <>
             <div className="rounded-xl border border-border bg-surface p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Upcoming Sessions</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{seekerStats.upcomingSessions}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isSeekerLoading ? '—' : seekerStats.upcomingSessions}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Calendar className="h-6 w-6 text-primary" />
@@ -334,7 +284,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Messages</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{seekerStats.messages}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isSeekerLoading ? '—' : seekerStats.unreadMessages}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <MessageSquare className="h-6 w-6 text-primary" />
@@ -345,7 +297,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Guides Connected</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{seekerStats.guidesConnected}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isSeekerLoading ? '—' : seekerStats.guidesConnected}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-6 w-6 text-primary" />
@@ -356,7 +310,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Sessions Completed</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{seekerStats.sessionsCompleted}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isSeekerLoading ? '—' : seekerStats.sessionsCompleted}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Star className="h-6 w-6 text-primary" />
@@ -370,7 +326,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Upcoming Sessions</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{guideStats.upcomingSessions}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isGuideLoading ? '—' : guideStats.upcomingSessions}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Calendar className="h-6 w-6 text-primary" />
@@ -381,7 +339,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Pending Requests</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{guideStats.pendingRequests}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isGuideLoading ? '—' : guideStats.pendingRequests}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Bell className="h-6 w-6 text-primary" />
@@ -392,7 +352,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">This Month&apos;s Earnings</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">${guideStats.monthlyEarnings}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isGuideLoading ? '—' : `$${guideStats.monthlyEarnings}`}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
                   <span className="text-xl font-bold text-green-600">$</span>
@@ -403,7 +365,9 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-text-muted">Avg. Rating</p>
-                  <p className="mt-2 text-2xl font-bold text-text-primary">{guideStats.avgRating}</p>
+                  <p className="mt-2 text-2xl font-bold text-text-primary">
+                    {isGuideLoading ? '—' : guideStats.avgRating ?? '—'}
+                  </p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                   <Star className="h-6 w-6 text-primary" />
@@ -418,7 +382,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column - Upcoming Sessions or Session Requests */}
         <div className="lg:col-span-2 space-y-6">
-          {dashboardRole === 'SEEKER' ? (
+          {activeRole === 'SEEKER' ? (
             <div className="rounded-xl border border-border bg-surface p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-text-primary">Your Upcoming Sessions</h2>
@@ -427,6 +391,11 @@ export function DashboardPage() {
                 </Link>
               </div>
               <div className="space-y-4">
+                {isSeekerLoading && (
+                  <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                    Loading upcoming sessions...
+                  </div>
+                )}
                 {seekerUpcomingSessions.map((session) => (
                   <div key={session.id} className="rounded-lg border border-border bg-background p-4">
                     <div className="flex items-start justify-between">
@@ -481,6 +450,11 @@ export function DashboardPage() {
                   </Link>
                 </div>
                 <div className="space-y-4">
+                  {isGuideLoading && (
+                    <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                      Loading upcoming sessions...
+                    </div>
+                  )}
                   {guideUpcomingSessions.map((session) => (
                     <div key={session.id} className="rounded-lg border border-border bg-background p-4">
                       <div className="flex items-start justify-between">
@@ -534,6 +508,11 @@ export function DashboardPage() {
                   </Link>
                 </div>
                 <div className="space-y-4">
+                  {isGuideLoading && (
+                    <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                      Loading requests...
+                    </div>
+                  )}
                   {guideSessionRequests.map((request) => (
                     <div key={request.id} className="rounded-lg border border-border bg-background p-4">
                       <div className="flex items-start justify-between">
@@ -591,7 +570,15 @@ export function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-4">
-            {recentMessages.map((message) => (
+            {activeRole === 'SEEKER' && isSeekerLoading ? (
+              <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                Loading messages...
+              </div>
+            ) : null}
+            {(activeRole === 'SEEKER'
+              ? (recentMessages as unknown as { id: string; name: string; initials: string; message: string; createdAt: string; isUnread: boolean }[])
+              : (recentMessages as any)
+            ).map((message: any) => (
               <Link
                 key={message.id}
                 to="/messages"
@@ -602,14 +589,16 @@ export function DashboardPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                       {message.initials}
                     </div>
-                    {message.unread && (
+                    {(message.unread ?? message.isUnread) && (
                       <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-yellow-400 border-2 border-white" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-text-primary">{message.name}</h3>
-                      <span className="text-xs text-text-muted">{message.time}</span>
+                      <span className="text-xs text-text-muted">
+                        {message.time ?? new Date(message.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                     <p className="mt-1 text-sm text-text-muted line-clamp-2">{message.message}</p>
                   </div>

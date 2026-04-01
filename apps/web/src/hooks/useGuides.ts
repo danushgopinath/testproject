@@ -7,6 +7,7 @@ export interface GuideListItem {
   headline: string
   university: string | null
   languages: string[]
+  specializations: string[]
   totalSessions: number
   averageRating: number | null
   journeys: {
@@ -28,14 +29,15 @@ export function useGuides(params?: {
   university?: string
   specialization?: string
   language?: string
+  limit?: number
 }) {
-  const { search, university, specialization, language } = params ?? {}
+  const { search, university, specialization, language, limit } = params ?? {}
 
   return useQuery({
-    queryKey: ['guides', { search, university, specialization, language }],
+    queryKey: ['guides', { search, university, specialization, language, limit }],
     queryFn: async () => {
       const res = await apiClient.get<GuidesResponse>('/guides', {
-        params: { search, university, specialization, language },
+        params: { search, university, specialization, language, limit },
       })
       return res.data
     },

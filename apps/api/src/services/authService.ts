@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { userRepository } from '../repositories/userRepository'
 import { AppError, AuthError, ValidationError } from '../utils/errors'
 import { env } from '../config/env'
+import { logger } from '../config/logger'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -130,12 +131,21 @@ export const authService = {
     }
 
     const payload = (await googleRes.json()) as {
+      aud: string
       sub: string
       email: string
       given_name?: string
       family_name?: string
       picture?: string
       email_verified?: string
+    }
+
+    if (payload.aud !== env.GOOGLE_CLIENT_ID) {
+      throw new AuthError('Google token audience mismatch', 401)
+    }
+
+    if (payload.email_verified !== 'true') {
+      throw new AuthError('Google account email is not verified', 401)
     }
 
     if (payload.email === undefined) {
@@ -221,7 +231,7 @@ export const authService = {
 
     if (!tokenRes.ok) {
       const errorData = await tokenRes.text()
-      console.error('LinkedIn token exchange error:', errorData)
+      logger.error('LinkedIn token exchange error', { errorData })
       throw new AuthError(`Failed to exchange LinkedIn code: ${errorData}`, 401)
     }
 
@@ -240,7 +250,7 @@ export const authService = {
 
     if (!profileRes.ok) {
       const errorData = await profileRes.text()
-      console.error('LinkedIn profile fetch error:', errorData)
+      logger.error('LinkedIn profile fetch error', { errorData })
       throw new AuthError(`Failed to fetch LinkedIn profile: ${errorData}`, 401)
     }
 

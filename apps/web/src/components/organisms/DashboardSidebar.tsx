@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Calendar, MessageSquare, Bell, DollarSign, Users, TrendingUp, BarChart3 } from 'lucide-react'
+import { Calendar, MessageSquare, Bell, DollarSign, Users, TrendingUp, BarChart3, X } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { cloneElement } from 'react'
 
 interface SidebarItem {
   label: string
-  icon: React.ReactNode
+  icon: React.ReactElement<{ style?: React.CSSProperties; className?: string }>
   path: string
   badge?: number
 }
@@ -15,7 +15,7 @@ interface SidebarSection {
   items: SidebarItem[]
 }
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
   const location = useLocation()
   const { dashboardRole, user } = useAuthStore()
   const activeRole = (dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')
@@ -106,8 +106,19 @@ export function DashboardSidebar() {
   ]
 
   return (
-    <aside className="hidden lg:block w-64 shrink-0 border-r border-border bg-surface">
+    <aside className={`${onClose ? 'block' : 'hidden lg:block'} w-64 shrink-0 border-r border-border bg-surface`}>
       <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto p-6">
+        {/* Close button — only shown when used in mobile drawer */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mb-4 flex items-center justify-end w-full text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
         {/* Dashboard Home Link */}
         {(() => {
           const dashboardActive = isActive('/dashboard') && location.pathname === '/dashboard'
@@ -150,8 +161,7 @@ export function DashboardSidebar() {
                     style={active ? { color: 'white' } : undefined}
                   >
                     <div className="flex items-center gap-3" style={active ? { color: 'white' } : undefined}>
-                      {cloneElement(item.icon as React.ReactElement, {
-                        className: 'h-5 w-5',
+                      {cloneElement(item.icon, {
                         style: active ? { color: 'white' } : undefined,
                       })}
                       <span style={active ? { color: 'white' } : undefined}>{item.label}</span>

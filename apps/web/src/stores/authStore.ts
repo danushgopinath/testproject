@@ -47,14 +47,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
    dashboardRole: null,
 
   setAuth: (user, accessToken) => {
-    localStorage.setItem('accessToken', accessToken)
-    // Set default Authorization header for all future requests
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
     set({ user, accessToken })
   },
 
   clearAuth: () => {
-    localStorage.removeItem('accessToken')
     delete apiClient.defaults.headers.common['Authorization']
     set({ user: null, accessToken: null })
   },
@@ -65,6 +62,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await apiClient.post('/auth/register', data)
       const { user, accessToken } = res.data
       get().setAuth(user, accessToken)
+    } catch (error) {
+      set({ isLoading: false })
+      throw error // Re-throw so the component can handle it
     } finally {
       set({ isLoading: false })
     }
@@ -76,6 +76,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await apiClient.post('/auth/login', data)
       const { user, accessToken } = res.data
       get().setAuth(user, accessToken)
+    } catch (error) {
+      set({ isLoading: false })
+      throw error
     } finally {
       set({ isLoading: false })
     }
@@ -136,26 +139,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
-    const savedToken = localStorage.getItem('accessToken')
-    if (savedToken) {
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
-      set({ accessToken: savedToken })
-      try {
-        const res = await apiClient.get('/auth/me')
-        set({ user: res.data.user, isInitialized: true })
-        return
-      } catch {
-        // Token expired — try refresh
-        try {
-          const refreshRes = await apiClient.post('/auth/refresh')
-          const { user, accessToken } = refreshRes.data
-          get().setAuth(user, accessToken)
-          set({ isInitialized: true })
-          return
-        } catch {
-          get().clearAuth()
-        }
-      }
+    try {
+      const res = await apiClient.post('/auth/refresh')
+      const { user, accessToken } = res.data
+      get().setAuth(user, accessToken)
+    } catch {
+      // No valid session — stay logged out
+      get().clearAuth()
     }
     set({ isInitialized: true })
   },
@@ -164,29 +154,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }))
 
-// Set up axios interceptor to auto-refresh on 401
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      originalRequest.url !== '/auth/refresh' &&
-      originalRequest.url !== '/auth/login'
-    ) {
-      originalRequest._retry = true
-      try {
-        const res = await apiClient.post('/auth/refresh')
-        const { accessToken } = res.data
-        useAuthStore.getState().setAuth(res.data.user, accessToken)
-        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`
-        return apiClient(originalRequest)
-      } catch {
-        useAuthStore.getState().clearAuth()
-        return Promise.reject(error)
-      }
-    }
-    return Promise.reject(error)
-  }
-)

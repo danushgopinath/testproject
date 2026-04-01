@@ -41,6 +41,7 @@ export const guideService = {
       headline: g.headline,
       university: g.university,
       languages: g.languages,
+      specializations: g.specializations,
       totalSessions: g.totalSessions,
       averageRating: g.averageRating,
       journeys: g.journeys.map((j) => ({
@@ -73,6 +74,7 @@ export const guideService = {
       university: guide.university,
       graduationYear: guide.graduationYear,
       languages: guide.languages,
+      specializations: guide.specializations,
       totalSessions: guide.totalSessions,
       averageRating: guide.averageRating,
       journeys: guide.journeys

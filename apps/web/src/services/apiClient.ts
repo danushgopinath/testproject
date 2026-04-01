@@ -6,5 +6,57 @@ const baseURL =
 export const apiClient = axios.create({
   baseURL,
   withCredentials: true,
+  timeout: 30000, // 30 second timeout
 })
 
+// Request interceptor — dev logging only
+apiClient.interceptors.request.use(
+  (config) => {
+    if (import.meta.env.DEV) {
+      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`)
+    }
+    return config
+  },
+  (error) => {
+    console.error('[API] Request error:', error)
+    return Promise.reject(error)
+  }
+)
+
+// Response interceptor — log errors + auto-refresh on 401
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    console.error('[API] Response error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+    })
+
+    const originalRequest = error.config
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/auth/refresh' &&
+      originalRequest.url !== '/auth/login'
+    ) {
+      originalRequest._retry = true
+      try {
+        const res = await apiClient.post('/auth/refresh')
+        const { accessToken } = res.data
+        // Lazily import to avoid circular dependency at module load time
+        const { useAuthStore } = await import('../stores/authStore')
+        useAuthStore.getState().setAuth(res.data.user, accessToken)
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`
+        return apiClient(originalRequest)
+      } catch {
+        const { useAuthStore } = await import('../stores/authStore')
+        useAuthStore.getState().clearAuth()
+        return Promise.reject(error)
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)

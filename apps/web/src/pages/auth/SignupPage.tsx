@@ -26,9 +26,11 @@ export function SignupPage() {
     watch,
     trigger,
   } = useForm<RegisterFormInput>({
-    resolver: zodResolver(registerSchema),
+    // Use synchronous Zod resolver so validation errors are handled by RHF
+    // instead of showing as uncaught promise rejections in the console.
+    resolver: zodResolver(registerSchema, undefined, { mode: 'sync' }),
     mode: 'onBlur',
-    reValidateMode: 'onChange',
+    reValidateMode: 'onBlur',
     defaultValues: {
       role: 'SEEKER',
       firstName: '',
@@ -42,10 +44,16 @@ export function SignupPage() {
   const password = watch('password')
   const confirmPassword = watch('confirmPassword')
 
-  // Re-validate confirmPassword when password or confirmPassword changes
+  // Re-validate confirmPassword when password or confirmPassword changes (only if both have values)
   useEffect(() => {
-    if (confirmPassword && password) {
-      trigger('confirmPassword')
+    if (confirmPassword && password && confirmPassword.length > 0 && password.length > 0) {
+      // Use setTimeout to avoid validation during typing
+      const timeoutId = setTimeout(() => {
+        trigger('confirmPassword').catch(() => {
+          // Silently handle validation errors - they're already shown in the UI
+        })
+      }, 300)
+      return () => clearTimeout(timeoutId)
     }
   }, [password, confirmPassword, trigger])
 
@@ -63,8 +71,23 @@ export function SignupPage() {
       await registerUser(registerData as RegisterInput)
       navigate('/dashboard')
     } catch (err) {
+      // Handle network errors (no response)
       if (err instanceof AxiosError) {
-        setApiError(err.response?.data?.message ?? 'Registration failed. Please try again.')
+        if (!err.response) {
+          // Network error or timeout
+          const errorMessage = err.code === 'ECONNABORTED' 
+            ? 'Request timed out. Please check your connection and try again.'
+            : err.message?.includes('Network Error')
+            ? 'Network error. Please check if the API server is running and accessible.'
+            : `Connection error: ${err.message || 'Unable to reach the server'}`
+          setApiError(errorMessage)
+        } else {
+          // API returned an error response
+          const errorMessage = err.response?.data?.message ?? err.message ?? 'Registration failed. Please try again.'
+          setApiError(errorMessage)
+        }
+      } else if (err instanceof Error) {
+        setApiError(err.message || 'Something went wrong. Please try again.')
       } else {
         setApiError('Something went wrong. Please try again.')
       }
@@ -96,7 +119,7 @@ export function SignupPage() {
           theme: 'outline',
           size: 'large',
           text: 'signup_with',
-          width: '100%',
+          width: 220,
         })
       }
     }
@@ -153,7 +176,7 @@ export function SignupPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="firstName" className="block text-sm font-medium text-text-primary">
                 First name
@@ -258,13 +281,27 @@ export function SignupPage() {
             )}
           </div>
 
+          {/* Show validation errors summary if any */}
+          {(errors.firstName || errors.lastName || errors.email || errors.password || errors.confirmPassword) && (
+            <div className="rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+              <p className="font-medium">Please fix the following errors:</p>
+              <ul className="mt-2 list-disc list-inside space-y-1">
+                {errors.firstName && <li>{errors.firstName.message}</li>}
+                {errors.lastName && <li>{errors.lastName.message}</li>}
+                {errors.email && <li>{errors.email.message}</li>}
+                {errors.password && <li>{errors.password.message}</li>}
+                {errors.confirmPassword && <li>{errors.confirmPassword.message}</li>}
+              </ul>
+            </div>
+          )}
+
           <Button
             type="submit"
             fullWidth
-            disabled={isSubmitting || isLoading || !!errors.confirmPassword || !!errors.password}
+            disabled={isSubmitting || isLoading}
             className="py-3 text-base"
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading || isSubmitting ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
 
@@ -279,13 +316,15 @@ export function SignupPage() {
         </div>
 
         {/* Social Login */}
-        <div className="grid grid-cols-2 gap-4">
-          <div ref={googleButtonRef} className="flex items-center justify-center"></div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-1 items-center justify-center">
+            <div ref={googleButtonRef} className="w-full max-w-[220px]"></div>
+          </div>
           <button
             type="button"
             onClick={handleLinkedInSignup}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2.5 rounded-lg border border-border bg-surface px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-background disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2.5 rounded-lg border border-border bg-surface px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-background disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#0077B5">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.065 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
@@ -305,3 +344,4 @@ export function SignupPage() {
     </div>
   )
 }
+

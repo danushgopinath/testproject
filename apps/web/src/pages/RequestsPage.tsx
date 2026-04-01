@@ -1,4 +1,4 @@
-import { Bell, Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 
 export function RequestsPage() {
