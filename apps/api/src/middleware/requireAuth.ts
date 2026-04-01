@@ -29,7 +29,7 @@ export function requireAuth(req: AuthenticatedRequest, _res: Response, next: Nex
     if (!decoded.sub) {
       return next(new AuthError('Invalid token', 401))
     }
-    req.auth = { userId: decoded.sub, role: decoded.role }
+    req.auth = { userId: decoded.sub, ...(decoded.role !== undefined && { role: decoded.role }) }
     return next()
   } catch {
     return next(new AuthError('Invalid or expired token', 401))
