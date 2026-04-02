@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler'
 import { authRoutes } from './routes/authRoutes'
 import { guideRoutes } from './routes/guideRoutes'
 import { dashboardRoutes } from './routes/dashboardRoutes'
+import { onboardingRoutes } from './routes/onboardingRoutes'
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.get('/api/v1/health', (_req, res) => {
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/guides', guideRoutes)
 app.use('/api/v1/dashboard', dashboardRoutes)
+app.use('/api/v1/onboarding', onboardingRoutes)
 
 app.use(errorHandler)
 

@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useGuideDashboard, useSeekerDashboard } from '../hooks/useDashboard'
+import { onboardingApi } from '../services/onboardingService'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
@@ -72,25 +73,30 @@ export function DashboardPage() {
   const activeRole: DashboardRole =
     (dashboardRole as DashboardRole | null) || ((user?.role as DashboardRole | undefined) ?? 'SEEKER')
 
-  // Check if mentor onboarding is complete
+  // Auto-toggle to mentor mode if coming from "Become a Mentor"
   useEffect(() => {
-    const completed = localStorage.getItem('mentorOnboardingComplete') === 'true'
-    setIsOnboardingComplete(completed)
-    
-    // Auto-toggle to mentor mode if coming from "Become a Mentor"
     const becomeMentor = searchParams.get('becomeMentor') === 'true' || sessionStorage.getItem('becomeMentor') === 'true'
     if (becomeMentor && dashboardRole !== 'GUIDE') {
       setDashboardRole('GUIDE')
-      // Clear the flag
       sessionStorage.removeItem('becomeMentor')
       searchParams.delete('becomeMentor')
       setSearchParams(searchParams, { replace: true })
     }
-  }, [searchParams, dashboardRole, setDashboardRole])
+  }, [searchParams, dashboardRole, setDashboardRole, setSearchParams])
+
+  // Check onboarding status from backend when in GUIDE mode
+  useEffect(() => {
+    if (activeRole !== 'GUIDE') return
+    onboardingApi.getStatus()
+      .then(({ isComplete }) => setIsOnboardingComplete(isComplete))
+      .catch(() => {
+        // Fall back to localStorage if API fails (e.g. not yet deployed)
+        setIsOnboardingComplete(localStorage.getItem('mentorOnboardingComplete') === 'true')
+      })
+  }, [activeRole])
 
   const handleOnboardingComplete = () => {
     setIsOnboardingComplete(true)
-    localStorage.setItem('mentorOnboardingComplete', 'true')
   }
 
   // Show onboarding form if user is in mentor mode and hasn't completed onboarding

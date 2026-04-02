@@ -46,6 +46,13 @@ model GuideProfile {
   isApproved      Boolean   @default(false)
   totalSessions   Int       @default(0)
   averageRating   Float?
+  // Mentor onboarding fields
+  phone           String?
+  linkedinUrl     String?
+  githubUrl       String?
+  resumeFileName  String?
+  resumeData      String?   @db.Text
+  resumeIsPublic  Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -53,6 +60,35 @@ model GuideProfile {
   journeys        Journey[]
   sessionsAsGuide Session[]   @relation("GuideSessions")
   reviews         Review[]    @relation("GuideReviews")
+  education       Education[]
+  experience      Experience[]
+}
+
+model Education {
+  id             String       @id @default(uuid())
+  guideProfileId String
+  school         String
+  degree         String
+  major          String
+  startYear      Int
+  endYear        Int?
+  createdAt      DateTime     @default(now())
+
+  guideProfile   GuideProfile @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
+}
+
+model Experience {
+  id               String       @id @default(uuid())
+  guideProfileId   String
+  organization     String
+  role             String
+  responsibilities String       @db.Text
+  startYear        Int
+  endYear          Int?
+  isCurrent        Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+
+  guideProfile     GuideProfile @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
 }
 
 model SeekerProfile {
