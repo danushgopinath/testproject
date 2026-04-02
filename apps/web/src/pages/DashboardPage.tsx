@@ -12,7 +12,7 @@ type DashboardRole = 'SEEKER' | 'GUIDE'
 export function DashboardPage() {
   const { user, dashboardRole, setDashboardRole } = useAuthStore()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showAvailability, setShowAvailability] = useState(false)
@@ -99,18 +99,28 @@ export function DashboardPage() {
     setIsOnboardingComplete(true)
   }
 
-  // Show onboarding form if user is in mentor mode and hasn't completed onboarding
-  if (activeRole === 'GUIDE' && !isOnboardingComplete) {
-    return <MentorOnboardingForm onComplete={handleOnboardingComplete} />
-  }
-
+  // Always call hooks unconditionally — must be before any early return
   const { data: seekerDashboard, isLoading: isSeekerLoading } = useSeekerDashboard(
-    Boolean(user) && activeRole === 'SEEKER',
+    Boolean(user) && activeRole === 'SEEKER' && isOnboardingComplete === true,
   )
 
   const { data: guideDashboard, isLoading: isGuideLoading } = useGuideDashboard(
-    Boolean(user) && activeRole === 'GUIDE',
+    Boolean(user) && activeRole === 'GUIDE' && isOnboardingComplete === true,
   )
+
+  // While checking onboarding status, show a spinner
+  if (activeRole === 'GUIDE' && isOnboardingComplete === null) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  // Show onboarding form if guide hasn't completed onboarding
+  if (activeRole === 'GUIDE' && isOnboardingComplete === false) {
+    return <MentorOnboardingForm onComplete={handleOnboardingComplete} />
+  }
 
   const seekerStats = seekerDashboard?.stats ?? {
     upcomingSessions: 0,
