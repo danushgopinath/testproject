@@ -189,7 +189,8 @@ export function Layout({ children }: LayoutProps) {
             <nav className="flex flex-col items-center gap-1 w-full mb-3">
               {[...navLinks, ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : [])].map(({ label, to }) => (
                 <NavLink key={to} to={to} onClick={() => setShowMobileNav(false)}
-                  className={({ isActive }) => ['w-full text-center px-2 py-2.5 text-xs font-medium uppercase tracking-widest rounded-lg transition-colors', isActive ? 'text-[#F5B400]' : 'text-white hover:bg-white/10'].join(' ')}
+                  className="w-full text-center px-2 py-2.5 text-xs font-medium uppercase tracking-widest rounded-lg transition-colors hover:bg-white/10"
+                  style={({ isActive }) => ({ color: isActive ? '#F5B400' : '#ffffff' })}
                 >{label}</NavLink>
               ))}
             </nav>

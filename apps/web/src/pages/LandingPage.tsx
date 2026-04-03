@@ -133,8 +133,8 @@ export function LandingPage() {
   return (
     <div className="w-full">
 
-      {/* ── 1. HERO — exactly 100dvh, nothing below the fold ── */}
-      <BeamsBackground className="h-dvh flex flex-col justify-center">
+      {/* ── 1. HERO — 105dvh mobile, 100dvh desktop ── */}
+      <BeamsBackground className="h-[105dvh] md:h-dvh flex flex-col justify-center">
         <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center">
 
           {/* Eyebrow */}
@@ -149,16 +149,18 @@ export function LandingPage() {
             <span className="h-px w-8 bg-[#F5B400]" />
           </div>
 
-          {/* Headline — min(vw,vh) keeps it within viewport on any screen */}
+          {/* Headline — 60px mobile, 110px desktop */}
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.95] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(44px, min(6.5vw, 9vh), 84px)',
+              fontSize: 'clamp(60px, 8vw, 110px)',
               animationDelay: '100ms',
             }}
           >
-            Get guidance from
+            {/* Mobile: "from" wraps to its own line. Desktop: stays inline. */}
+            Get guidance<span className="hidden md:inline"> from</span>
             <br />
+            <span className="inline md:hidden">from<br /></span>
             <em className="text-[#F5B400] not-italic" style={{ fontStyle: 'italic' }}>
               people who've
             </em>
