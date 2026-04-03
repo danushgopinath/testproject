@@ -208,10 +208,10 @@ export function Layout({ children }: LayoutProps) {
                     <p className="text-xs font-semibold text-white">{user.firstName} {user.lastName}</p>
                     <p className="text-[11px] text-white/50 break-all">{user.email}</p>
                   </div>
-                  <Link to="/profile" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white/75 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                  <Link to="/profile" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white hover:bg-white/10 rounded-lg transition-colors">
                     <User className="h-3.5 w-3.5" /> Profile
                   </Link>
-                  <Link to="/settings" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white/75 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                  <Link to="/settings" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white hover:bg-white/10 rounded-lg transition-colors">
                     <Settings className="h-3.5 w-3.5" /> Settings
                   </Link>
                   <button onClick={() => { handleLogout(); setShowMobileNav(false) }} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-white/5 rounded-lg transition-colors">
