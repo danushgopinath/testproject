@@ -133,10 +133,9 @@ export function LandingPage() {
   return (
     <div className="w-full">
 
-      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
-      <BeamsBackground className="min-h-dvh flex flex-col justify-center">
-        <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center"
-          style={{ paddingTop: 'clamp(5rem, 12vh, 9rem)', paddingBottom: 'clamp(3rem, 8vh, 6rem)' }}>
+      {/* ── 1. HERO — exactly 100dvh, nothing below the fold ── */}
+      <BeamsBackground className="h-dvh flex flex-col justify-center">
+        <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center">
 
           {/* Eyebrow */}
           <div
@@ -154,7 +153,7 @@ export function LandingPage() {
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.92] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(42px, 7.5vw, 112px)',
+              fontSize: 'clamp(38px, 7.5vw, 112px)',
               animationDelay: '100ms',
             }}
           >
@@ -196,28 +195,28 @@ export function LandingPage() {
           </div>
 
         </div>
+      </BeamsBackground>
 
-        {/* ── Stats bar inside hero ── */}
-        <div className="border-t border-white/8 mt-0">
-          <div className="mx-auto max-w-5xl px-6 md:px-10 py-12 md:py-16">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-white/10">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center md:px-10">
-                  <p
-                    className="font-display font-semibold text-[#F5B400] leading-none"
-                    style={{ fontSize: 'clamp(40px, 5vw, 64px)' }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p className="mt-2 text-white/35 text-xs uppercase tracking-widest">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+      {/* ── Stats bar — first thing visible on scroll ── */}
+      <div className="bg-[#070738] border-t border-white/8">
+        <div className="mx-auto max-w-5xl px-6 md:px-10 py-12 md:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-white/10">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center md:px-10">
+                <p
+                  className="font-display font-semibold text-[#F5B400] leading-none"
+                  style={{ fontSize: 'clamp(40px, 5vw, 64px)' }}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-white/35 text-xs uppercase tracking-widest">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
-      </BeamsBackground>
+      </div>
 
       {/* ── 3. PITCH ─────────────────────────────────────────────────────────── */}
       <section className="bg-[#F7F5F0] py-24 md:py-32 px-6 md:px-10">
