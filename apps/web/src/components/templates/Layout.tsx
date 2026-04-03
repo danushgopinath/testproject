@@ -110,7 +110,7 @@ export function Layout({ children }: LayoutProps) {
             'flex flex-col items-center',
             'px-6 py-4',
             'border border-white/10 bg-[#070738]/70 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.5)]',
-            'w-[calc(100%-2rem)] min-[1100px]:w-[70vw]',
+            'w-[calc(100%-2rem)] md:w-[75vw]',
             'transition-[border-radius,background,border-color,box-shadow] duration-300 ease-in-out',
             pillShape,
           ].join(' ')}
