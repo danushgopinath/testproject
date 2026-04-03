@@ -149,11 +149,11 @@ export function LandingPage() {
             <span className="h-px w-8 bg-[#F5B400]" />
           </div>
 
-          {/* Headline — 60px mobile, 110px desktop */}
+          {/* Headline — scales with vw: 390px→60px, 360px→55px, 1366px→110px */}
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.95] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(60px, 8vw, 110px)',
+              fontSize: 'clamp(28px, 15.4vw, 110px)',
               animationDelay: '100ms',
             }}
           >
