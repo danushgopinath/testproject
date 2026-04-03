@@ -185,16 +185,42 @@ export function Layout({ children }: LayoutProps) {
             </button>
           </div>
 
-          <div className={['sm:hidden flex flex-col items-center w-full overflow-hidden transition-all ease-in-out duration-300', showMobileNav ? 'max-h-96 opacity-100 pt-4' : 'max-h-0 opacity-0 pt-0 pointer-events-none'].join(' ')}>
-            <nav className="flex flex-col items-center gap-1 w-full mb-4">
+          <div className={['sm:hidden flex flex-col items-center w-full overflow-hidden transition-all ease-in-out duration-300', showMobileNav ? 'max-h-[32rem] opacity-100 pt-4' : 'max-h-0 opacity-0 pt-0 pointer-events-none'].join(' ')}>
+            <nav className="flex flex-col items-center gap-1 w-full mb-3">
               {[...navLinks, ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : [])].map(({ label, to }) => (
                 <NavLink key={to} to={to} onClick={() => setShowMobileNav(false)}
                   className={({ isActive }) => ['w-full text-center px-2 py-2.5 text-xs font-medium uppercase tracking-widest rounded-lg transition-colors', isActive ? 'text-[#F5B400]' : 'text-white/75 hover:text-white hover:bg-white/5'].join(' ')}
                 >{label}</NavLink>
               ))}
             </nav>
-            {!user && (
-              <Link to="/auth/login" className="w-full text-center px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[#0f172a] bg-gradient-to-br from-gray-100 to-gray-300 rounded-full hover:from-white hover:to-gray-200 transition-all">
+            {user ? (
+              <>
+                {isDashboard && (
+                  <div className="w-full mb-3 flex justify-center">
+                    <RoleSwitcher
+                      currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
+                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false) }}
+                    />
+                  </div>
+                )}
+                <div className="w-full border-t border-white/10 pt-3 space-y-1">
+                  <div className="px-2 pb-2">
+                    <p className="text-xs font-semibold text-white">{user.firstName} {user.lastName}</p>
+                    <p className="text-[11px] text-white/50 break-all">{user.email}</p>
+                  </div>
+                  <Link to="/profile" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white/75 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                    <User className="h-3.5 w-3.5" /> Profile
+                  </Link>
+                  <Link to="/settings" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-white/75 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                    <Settings className="h-3.5 w-3.5" /> Settings
+                  </Link>
+                  <button onClick={() => { handleLogout(); setShowMobileNav(false) }} className="flex items-center gap-2 w-full px-2 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-white/5 rounded-lg transition-colors">
+                    <LogOut className="h-3.5 w-3.5" /> Sign Out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <Link to="/auth/login" onClick={() => setShowMobileNav(false)} className="w-full text-center px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[#0f172a] bg-gradient-to-br from-gray-100 to-gray-300 rounded-full hover:from-white hover:to-gray-200 transition-all">
                 Sign In
               </Link>
             )}
@@ -280,19 +306,45 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Mobile dropdown */}
-          <div className={['sm:hidden overflow-hidden transition-all ease-in-out duration-300 border-t border-[#070738]/8', showMobileNav ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'].join(' ')}>
-            <nav className="flex flex-col px-6 py-3 gap-1">
+          <div className={['sm:hidden overflow-hidden transition-all ease-in-out duration-300 border-t border-[#070738]/8 bg-white', showMobileNav ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'].join(' ')}>
+            <nav className="flex flex-col px-6 pt-3 pb-1 gap-1">
               {[...navLinks, ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : [])].map(({ label, to }) => (
                 <NavLink key={to} to={to} onClick={() => setShowMobileNav(false)}
                   className={({ isActive }) => ['px-2 py-2.5 text-sm font-medium rounded-lg transition-colors', isActive ? 'text-[#070738] font-semibold' : 'text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc]'].join(' ')}
                 >{label}</NavLink>
               ))}
-              {!user && (
-                <Link to="/auth/login" onClick={() => setShowMobileNav(false)} className="mt-2 px-2 py-2.5 text-sm font-semibold text-[#070738]">
+            </nav>
+            {user ? (
+              <div className="px-6 pb-4 border-t border-[#070738]/8 pt-3 space-y-1">
+                {isDashboard && (
+                  <div className="mb-3 flex">
+                    <RoleSwitcher
+                      currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
+                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false) }}
+                    />
+                  </div>
+                )}
+                <div className="px-2 pb-2">
+                  <p className="text-sm font-semibold text-[#070738]">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-[#5B6B85] break-all">{user.email}</p>
+                </div>
+                <Link to="/profile" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 px-2 py-2.5 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] rounded-lg transition-colors">
+                  <User className="h-4 w-4" /> Profile
+                </Link>
+                <Link to="/settings" onClick={() => setShowMobileNav(false)} className="flex items-center gap-2 px-2 py-2.5 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] rounded-lg transition-colors">
+                  <Settings className="h-4 w-4" /> Settings
+                </Link>
+                <button onClick={() => { handleLogout(); setShowMobileNav(false) }} className="flex items-center gap-2 w-full px-2 py-2.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="px-6 pb-4">
+                <Link to="/auth/login" onClick={() => setShowMobileNav(false)} className="block px-2 py-2.5 text-sm font-semibold text-[#070738]">
                   Sign In
                 </Link>
-              )}
-            </nav>
+              </div>
+            )}
           </div>
         </header>
       )}
