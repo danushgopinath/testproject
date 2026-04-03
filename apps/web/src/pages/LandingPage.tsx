@@ -133,13 +133,16 @@ export function LandingPage() {
   return (
     <div className="w-full">
 
-      {/* ── 1. HERO — 105dvh mobile, 100dvh desktop ── */}
-      <BeamsBackground className="h-[105dvh] md:h-dvh flex flex-col justify-center">
-        <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center">
+      {/* ── 1. HERO — full viewport, content offset below fixed navbar ── */}
+      <BeamsBackground className="h-dvh flex flex-col justify-center">
+        <div
+          className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center"
+          style={{ paddingTop: 'clamp(5rem, 14vh, 10rem)' }}
+        >
 
           {/* Eyebrow */}
           <div
-            className="animate-fade-up inline-flex items-center gap-3 mb-6 md:mb-10"
+            className="animate-fade-up inline-flex items-center gap-3 mb-4 md:mb-10"
             style={{ animationDelay: '0ms' }}
           >
             <span className="h-px w-8 bg-[#F5B400]" />
@@ -170,7 +173,7 @@ export function LandingPage() {
 
           {/* Subline */}
           <p
-            className="animate-fade-up mt-5 md:mt-8 text-white/55 text-sm md:text-base lg:text-lg max-w-xl leading-relaxed"
+            className="animate-fade-up mt-3 md:mt-8 text-white/55 text-sm md:text-base lg:text-lg max-w-xl leading-relaxed"
             style={{ animationDelay: '220ms' }}
           >
             One conversation with the right person beats a hundred articles.
@@ -179,7 +182,7 @@ export function LandingPage() {
 
           {/* CTAs */}
           <div
-            className="animate-fade-up mt-7 md:mt-10 flex flex-wrap gap-4 justify-center"
+            className="animate-fade-up mt-5 md:mt-10 flex flex-wrap gap-4 justify-center"
             style={{ animationDelay: '340ms' }}
           >
             <Link to="/guides">
