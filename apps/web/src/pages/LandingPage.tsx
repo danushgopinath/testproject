@@ -134,12 +134,13 @@ export function LandingPage() {
     <div className="w-full">
 
       {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
-      <BeamsBackground className="min-h-screen flex flex-col justify-center">
-        <div className="mx-auto max-w-5xl px-6 md:px-10 pt-32 pb-28 flex flex-col items-center text-center">
+      <BeamsBackground className="min-h-dvh flex flex-col justify-center">
+        <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center"
+          style={{ paddingTop: 'clamp(5rem, 12vh, 9rem)', paddingBottom: 'clamp(3rem, 8vh, 6rem)' }}>
 
           {/* Eyebrow */}
           <div
-            className="animate-fade-up inline-flex items-center gap-3 mb-10"
+            className="animate-fade-up inline-flex items-center gap-3 mb-6 md:mb-10"
             style={{ animationDelay: '0ms' }}
           >
             <span className="h-px w-8 bg-[#F5B400]" />
@@ -153,7 +154,7 @@ export function LandingPage() {
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.92] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(64px, 10vw, 120px)',
+              fontSize: 'clamp(42px, 7.5vw, 112px)',
               animationDelay: '100ms',
             }}
           >
@@ -168,7 +169,7 @@ export function LandingPage() {
 
           {/* Subline */}
           <p
-            className="animate-fade-up mt-8 text-white/55 text-base md:text-lg max-w-xl leading-relaxed"
+            className="animate-fade-up mt-5 md:mt-8 text-white/55 text-sm md:text-base lg:text-lg max-w-xl leading-relaxed"
             style={{ animationDelay: '220ms' }}
           >
             One conversation with the right person beats a hundred articles.
@@ -177,18 +178,18 @@ export function LandingPage() {
 
           {/* CTAs */}
           <div
-            className="animate-fade-up mt-10 flex flex-wrap gap-4 justify-center"
+            className="animate-fade-up mt-7 md:mt-10 flex flex-wrap gap-4 justify-center"
             style={{ animationDelay: '340ms' }}
           >
             <Link to="/guides">
-              <button className="h-13 px-8 bg-[#F5B400] text-[#070738] text-sm font-semibold flex items-center gap-2.5 hover:bg-[#F5B400]/90 transition-colors">
+              <button className="h-12 px-7 bg-[#F5B400] text-[#070738] text-sm font-semibold flex items-center gap-2.5 hover:bg-[#F5B400]/90 transition-colors">
                 Find a Guide
                 <ArrowRight className="h-4 w-4" />
               </button>
             </Link>
             <button
               onClick={handleBecomeMentor}
-              className="h-13 px-8 border border-white/20 text-white text-sm font-medium hover:border-white/40 hover:bg-white/5 transition-all"
+              className="h-12 px-7 border border-white/20 text-white text-sm font-medium hover:border-white/40 hover:bg-white/5 transition-all"
             >
               Share Your Journey
             </button>
