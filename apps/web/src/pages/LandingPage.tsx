@@ -149,11 +149,11 @@ export function LandingPage() {
             <span className="h-px w-8 bg-[#F5B400]" />
           </div>
 
-          {/* Headline */}
+          {/* Headline — scales with both viewport width AND height so it never overflows */}
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.92] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(38px, 7.5vw, 112px)',
+              fontSize: 'clamp(28px, min(5vw, 7.5vh), 80px)',
               animationDelay: '100ms',
             }}
           >
