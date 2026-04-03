@@ -110,25 +110,25 @@ export function Layout({ children }: LayoutProps) {
             'flex flex-col items-center',
             'px-6 py-4',
             'border border-white/10 bg-[#070738]/70 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.5)]',
-            'w-[calc(100%-2rem)] sm:w-[70vw]',
+            'w-[calc(100%-2rem)] nav:w-[70vw]',
             'transition-[border-radius,background,border-color,box-shadow] duration-300 ease-in-out',
             pillShape,
           ].join(' ')}
         >
           {/* Main row */}
-          <div className="flex items-center justify-between w-full gap-x-6 sm:gap-x-8">
+          <div className="flex items-center justify-between w-full gap-x-6 nav:gap-x-8">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="flex h-6 w-6 items-center justify-center rounded text-[11px] font-bold bg-[#F5B400] text-[#070738]">E</div>
               <span className="text-sm font-semibold tracking-wide uppercase text-white">Expertify</span>
             </Link>
 
-            <nav className="hidden sm:flex items-center gap-6">
+            <nav className="hidden nav:flex items-center gap-6">
               {navLinks.map(({ label, to }) => (
                 <PillNavLink key={to} to={to} dark={true}>{label}</PillNavLink>
               ))}
             </nav>
 
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden nav:flex items-center gap-2">
               {user ? (
                 <>
                   {isDashboard && (
@@ -174,7 +174,7 @@ export function Layout({ children }: LayoutProps) {
 
             <button
               type="button"
-              className="sm:hidden flex items-center justify-center w-8 h-8 focus:outline-none text-white/75"
+              className="nav:hidden flex items-center justify-center w-8 h-8 focus:outline-none text-white/75"
               onClick={() => setShowMobileNav((o) => !o)}
               aria-label={showMobileNav ? 'Close menu' : 'Open menu'}
             >
@@ -185,7 +185,7 @@ export function Layout({ children }: LayoutProps) {
             </button>
           </div>
 
-          <div className={['sm:hidden flex flex-col items-center w-full overflow-hidden transition-all ease-in-out duration-300', showMobileNav ? 'max-h-[32rem] opacity-100 pt-4' : 'max-h-0 opacity-0 pt-0 pointer-events-none'].join(' ')}>
+          <div className={['nav:hidden flex flex-col items-center w-full overflow-hidden transition-all ease-in-out duration-300', showMobileNav ? 'max-h-[32rem] opacity-100 pt-4' : 'max-h-0 opacity-0 pt-0 pointer-events-none'].join(' ')}>
             <nav className="flex flex-col items-center gap-1 w-full mb-3">
               {[...navLinks, ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : [])].map(({ label, to }) => (
                 <NavLink key={to} to={to} onClick={() => setShowMobileNav(false)}
@@ -241,14 +241,14 @@ export function Layout({ children }: LayoutProps) {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden sm:flex items-center gap-8">
+            <nav className="hidden nav:flex items-center gap-8">
               {navLinks.map(({ label, to }) => (
                 <SimpleNavLink key={to} to={to}>{label}</SimpleNavLink>
               ))}
             </nav>
 
             {/* Right side */}
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden nav:flex items-center gap-3">
               {user ? (
                 <>
                   {isDashboard && (
@@ -295,7 +295,7 @@ export function Layout({ children }: LayoutProps) {
             {/* Mobile hamburger */}
             <button
               type="button"
-              className="sm:hidden flex items-center justify-center w-8 h-8 focus:outline-none text-[#070738]/60"
+              className="nav:hidden flex items-center justify-center w-8 h-8 focus:outline-none text-[#070738]/60"
               onClick={() => setShowMobileNav((o) => !o)}
               aria-label={showMobileNav ? 'Close menu' : 'Open menu'}
             >
@@ -307,7 +307,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Mobile dropdown */}
-          <div className={['sm:hidden overflow-hidden transition-all ease-in-out duration-300 border-t border-[#070738]/8 bg-white', showMobileNav ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'].join(' ')}>
+          <div className={['nav:hidden overflow-hidden transition-all ease-in-out duration-300 border-t border-[#070738]/8 bg-white', showMobileNav ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'].join(' ')}>
             <nav className="flex flex-col px-6 pt-3 pb-1 gap-1">
               {[...navLinks, ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : [])].map(({ label, to }) => (
                 <NavLink key={to} to={to} onClick={() => setShowMobileNav(false)}
