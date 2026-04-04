@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma'
+import { uploadToS3, getSignedUrl } from '../utils/s3'
 
 interface EducationInput {
   school: string
@@ -24,7 +25,7 @@ interface OnboardingInput {
   linkedinUrl: string
   githubUrl?: string
   resumeFileName?: string
-  resumeData?: string
+  resumeData?: string   // base64 DataURL from frontend, e.g. "data:application/pdf;base64,..."
   resumeIsPublic: boolean
   education: EducationInput[]
   experience: ExperienceInput[]
@@ -37,6 +38,21 @@ export const onboardingService = {
   async submitOnboarding(userId: string, data: OnboardingInput) {
     const headline = data.currentRole
 
+    // If a resume was uploaded, decode from base64 and push to S3
+    let resumeUrl: string | null = null
+    if (data.resumeData && data.resumeFileName) {
+      // DataURL format: "data:<mimeType>;base64,<data>"
+      const matches = data.resumeData.match(/^data:([^;]+);base64,(.+)$/)
+      if (matches && matches[1] && matches[2]) {
+        const contentType = matches[1]
+        const base64Data = matches[2]
+        const buffer = Buffer.from(base64Data, 'base64')
+        const timestamp = Date.now()
+        const key = `resumes/${userId}/${timestamp}-${data.resumeFileName}`
+        resumeUrl = await uploadToS3(buffer, key, contentType)
+      }
+    }
+
     const guide = await prisma.guideProfile.upsert({
       where: { userId },
       create: {
@@ -47,7 +63,7 @@ export const onboardingService = {
         linkedinUrl: data.linkedinUrl,
         githubUrl: data.githubUrl || null,
         resumeFileName: data.resumeFileName || null,
-        resumeData: data.resumeData || null,
+        resumeUrl,
         resumeIsPublic: data.resumeIsPublic,
         specializations: data.specializations,
         sessionRate: data.sessionRate * 100, // store in cents
@@ -61,7 +77,8 @@ export const onboardingService = {
         linkedinUrl: data.linkedinUrl,
         githubUrl: data.githubUrl || null,
         resumeFileName: data.resumeFileName || null,
-        resumeData: data.resumeData || null,
+        // Only overwrite resumeUrl if a new file was uploaded
+        ...(resumeUrl !== null && { resumeUrl }),
         resumeIsPublic: data.resumeIsPublic,
         specializations: data.specializations,
         sessionRate: data.sessionRate * 100,
@@ -104,7 +121,18 @@ export const onboardingService = {
         user: { select: { firstName: true, lastName: true, email: true, bio: true } },
       },
     })
-    return { guideProfile }
+
+    // Swap the stored S3 key for a fresh 15-min signed download URL
+    let resumeSignedUrl: string | null = null
+    if (guideProfile?.resumeUrl && guideProfile.resumeIsPublic) {
+      resumeSignedUrl = await getSignedUrl(guideProfile.resumeUrl)
+    }
+
+    return {
+      guideProfile: guideProfile
+        ? { ...guideProfile, resumeSignedUrl }
+        : null,
+    }
   },
 
   async getOnboardingStatus(userId: string) {

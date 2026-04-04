@@ -51,7 +51,7 @@ model GuideProfile {
   linkedinUrl     String?
   githubUrl       String?
   resumeFileName  String?
-  resumeData      String?   @db.Text
+  resumeUrl       String?   // S3 object key, e.g. "resumes/userId/timestamp-filename.pdf"
   resumeIsPublic  Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

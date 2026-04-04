@@ -30,6 +30,11 @@ const envSchema = z.object({
   LINKEDIN_CLIENT_ID: z.string().optional(),
   LINKEDIN_CLIENT_SECRET: z.string().optional(),
   LINKEDIN_REDIRECT_URI: z.string().optional(),
+  // AWS S3
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().default('us-east-1'),
+  AWS_S3_BUCKET: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
