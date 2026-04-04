@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, MapPin, GraduationCap, Building,
-  Star, Globe, Clock, Calendar, ChevronDown, X, ArrowRight,
+  Star, Globe, Clock, Calendar, ChevronDown, X,
 } from 'lucide-react'
 import { useGuides } from '../hooks/useGuides'
 
@@ -11,63 +11,76 @@ type FilterKey = 'university' | 'specialization' | 'language' | 'country' | 'deg
 // ── Guide card ────────────────────────────────────────────────────────────────
 function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
   const initials = guide.name.split(' ').map((p: string) => p[0]).join('').slice(0, 2)
+  const price = guide.sessionRate ? `$${(guide.sessionRate / 100).toFixed(0)}/hr` : 'Free'
+  const rating = guide.averageRating ? guide.averageRating.toFixed(1) : null
+  const langs = guide.languages?.length > 0 ? guide.languages : ['English']
+  const langLabel = langs.length > 1 ? `${langs[0]} +${langs.length - 1}` : langs[0]
+
   return (
-    <article className="bg-white flex flex-col p-7 hover:shadow-lg transition-shadow group">
-      <div className="flex items-start gap-4 mb-5">
-        <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-[#070738] text-sm font-semibold text-[#F5B400]">
+    <article className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200">
+      {/* Avatar + name */}
+      <div className="flex items-start gap-4 mb-4">
+        <div className="flex-shrink-0 h-14 w-14 flex items-center justify-center rounded-full bg-[#070738] text-base font-bold text-[#F5B400]">
           {initials}
         </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-[#070738]">{guide.name}</h2>
-          <p className="text-xs text-[#070738]/60 leading-relaxed mt-0.5">{guide.currentRole || guide.headline}</p>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h2 className="text-[15px] font-bold text-[#070738] leading-tight">{guide.name}</h2>
+          <p className="text-sm text-[#070738]/65 mt-0.5 leading-snug">{guide.currentRole || guide.headline}</p>
           {guide.university && (
-            <p className="text-xs text-[#070738]/60 mt-0.5">{guide.university}</p>
+            <p className="text-xs text-[#070738]/45 mt-0.5">{guide.university}</p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs mb-4">
-        <div className="flex items-center gap-1">
-          <Star className="h-3.5 w-3.5 fill-[#F5B400] text-[#F5B400]" />
-          <span className="font-semibold text-[#070738]">
-            {guide.averageRating ? guide.averageRating.toFixed(1) : 'New'}
-          </span>
-          <span className="text-[#070738]/60">· {guide.totalSessions} sessions</span>
+      {/* Rating + price */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <Star className="h-4 w-4 fill-[#F5B400] text-[#F5B400]" />
+          {rating ? (
+            <>
+              <span className="text-sm font-bold text-[#070738]">{rating}</span>
+              <span className="text-sm text-[#070738]/50">({guide.reviewCount ?? guide.totalSessions})</span>
+            </>
+          ) : (
+            <span className="text-sm font-semibold text-[#070738]/60">New</span>
+          )}
         </div>
-        <div className="flex items-center gap-1 text-[#070738]/60">
-          <Clock className="h-3 w-3" />
-          1:1 online
-        </div>
+        <span className="text-base font-bold text-[#070738]">{price}</span>
       </div>
 
-      <p className="text-xs text-[#070738]/60 leading-relaxed mb-4 line-clamp-2">
-        {guide.journeys[0]?.title ?? 'Experienced mentor ready to help with your journey.'}
+      {/* Bio */}
+      <p className="text-sm text-[#070738]/60 leading-relaxed mb-4 line-clamp-2">
+        {guide.bio || guide.journeys?.[0]?.title || 'Experienced mentor ready to help with your journey.'}
       </p>
 
-      <div className="flex flex-wrap gap-1.5 mb-5">
-        {guide.specializations.slice(0, 3).map((tag: string) => (
-          <span key={tag} className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide border border-[#070738]/15 text-[#070738]">
+      {/* Specialization tags */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {(guide.specializations ?? []).slice(0, 3).map((tag: string) => (
+          <span key={tag} className="px-2.5 py-1 text-[11px] font-medium border border-[#070738]/20 text-[#070738]/70 rounded-md">
             {tag}
           </span>
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-[#070738]/60 mb-5">
+      {/* Sessions + language */}
+      <div className="flex items-center justify-between text-xs text-[#070738]/50 mb-5 mt-auto">
         <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
-          {guide.sessionRate ? `$${(guide.sessionRate / 100).toFixed(0)}/hr` : 'Free'}
+          <Clock className="h-3.5 w-3.5" />
+          <span>{guide.totalSessions} session{guide.totalSessions !== 1 ? 's' : ''}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Globe className="h-3 w-3" />
-          {guide.languages.length > 0 ? guide.languages.join(', ') : 'English'}
+          <Globe className="h-3.5 w-3.5" />
+          <span>{langLabel}</span>
         </div>
       </div>
 
+      {/* CTA */}
       <button
         onClick={onBook}
-        className="mt-auto flex items-center justify-center gap-2 w-full h-10 border border-[#070738] text-[#070738] text-xs font-semibold uppercase tracking-widest hover:bg-[#070738] hover:text-white hover:border-[#070738] transition-all group-hover:bg-[#070738] group-hover:text-white group-hover:border-[#070738]"
+        className="flex items-center justify-center gap-2 w-full h-11 bg-[#070738] text-white text-sm font-semibold rounded-xl hover:bg-[#070738]/90 transition-colors"
       >
-        Book Session <ArrowRight className="h-3.5 w-3.5" />
+        <Calendar className="h-4 w-4" />
+        Book Session
       </button>
     </article>
   )
@@ -317,7 +330,7 @@ export function GuidesPage() {
             </div>
           )}
 
-          <div className="grid gap-px bg-[#070738]/10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {guides.map((guide) => (
               <GuideCard
                 key={guide.id}
