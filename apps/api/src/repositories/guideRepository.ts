@@ -16,9 +16,6 @@ export const guideRepository = {
 
     const where: Prisma.GuideProfileWhereInput = {
       isApproved: true,
-      user: {
-        isEmailVerified: true,
-      },
     }
 
     if (university) {
@@ -88,9 +85,6 @@ export const guideRepository = {
       where: {
         id,
         isApproved: true,
-        user: {
-          isEmailVerified: true,
-        },
       },
       include: {
         user: true,

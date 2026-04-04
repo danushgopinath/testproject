@@ -39,11 +39,13 @@ export const guideService = {
       id: g.id,
       name: `${g.user.firstName} ${g.user.lastName}`,
       headline: g.headline,
+      currentRole: g.currentRole,
       university: g.university,
       languages: g.languages,
       specializations: g.specializations,
       totalSessions: g.totalSessions,
       averageRating: g.averageRating,
+      sessionRate: g.sessionRate,
       journeys: g.journeys.map((j) => ({
         id: j.id,
         title: j.title,

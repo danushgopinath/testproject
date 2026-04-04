@@ -19,7 +19,7 @@ function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-[#070738]">{guide.name}</h2>
-          <p className="text-xs text-[#070738]/60 leading-relaxed mt-0.5">{guide.headline}</p>
+          <p className="text-xs text-[#070738]/60 leading-relaxed mt-0.5">{guide.currentRole || guide.headline}</p>
           {guide.university && (
             <p className="text-xs text-[#070738]/60 mt-0.5">{guide.university}</p>
           )}
@@ -55,11 +55,11 @@ function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
       <div className="flex items-center justify-between text-[11px] text-[#070738]/60 mb-5">
         <div className="flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          Flexible availability
+          {guide.sessionRate ? `$${(guide.sessionRate / 100).toFixed(0)}/hr` : 'Free'}
         </div>
         <div className="flex items-center gap-1">
           <Globe className="h-3 w-3" />
-          {guide.languages.join(', ')}
+          {guide.languages.length > 0 ? guide.languages.join(', ') : 'English'}
         </div>
       </div>
 
