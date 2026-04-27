@@ -91,6 +91,7 @@ export function GuidesPage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null)
+  const [sortBy, setSortBy] = useState<'highest_rated' | 'most_reviews' | 'price_high' | 'price_low'>('highest_rated')
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({
     university: [],
     specialization: [],
@@ -108,7 +109,23 @@ export function GuidesPage() {
     limit: 50,
   })
 
-  const guides = data?.guides ?? []
+  const rawGuides = data?.guides ?? []
+
+  const guides = useMemo(() => {
+    const sorted = [...rawGuides]
+    switch (sortBy) {
+      case 'highest_rated':
+        return sorted.sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0))
+      case 'most_reviews':
+        return sorted.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0))
+      case 'price_high':
+        return sorted.sort((a, b) => (b.sessionRate ?? 0) - (a.sessionRate ?? 0))
+      case 'price_low':
+        return sorted.sort((a, b) => (a.sessionRate ?? 0) - (b.sessionRate ?? 0))
+      default:
+        return sorted
+    }
+  }, [rawGuides, sortBy])
 
   const allUniversities = useMemo(
     () => Array.from(new Set(guides.map((g) => g.university).filter(Boolean))) as string[],
@@ -310,6 +327,28 @@ export function GuidesPage() {
       {/* ── CARDS ────────────────────────────────────────────────────────────── */}
       <div className="flex-1 bg-white px-6 md:px-10 py-10">
         <div className="mx-auto max-w-6xl">
+
+          {/* Sort + count row */}
+          {!isLoading && guides.length > 0 && (
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-sm text-[#070738]/60">
+                Showing <span className="font-semibold text-[#070738]">{guides.length}</span> mentor{guides.length !== 1 ? 's' : ''}
+              </span>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="appearance-none pl-3 pr-8 py-2 text-sm font-medium text-[#070738] border border-[#070738]/20 rounded-lg bg-white hover:border-[#070738]/40 focus:outline-none focus:border-[#070738]/60 cursor-pointer transition-colors"
+                >
+                  <option value="highest_rated">Highest Rated</option>
+                  <option value="most_reviews">Most Reviews</option>
+                  <option value="price_high">Price: High to Low</option>
+                  <option value="price_low">Price: Low to High</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#070738]/50" />
+              </div>
+            </div>
+          )}
 
           {isLoading && (
             <div className="py-24 text-center text-xs text-[#070738] uppercase tracking-widest">

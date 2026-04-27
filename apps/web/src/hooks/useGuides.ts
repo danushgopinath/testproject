@@ -5,11 +5,15 @@ export interface GuideListItem {
   id: string
   name: string
   headline: string
+  currentRole: string
+  bio: string | null
   university: string | null
   languages: string[]
   specializations: string[]
   totalSessions: number
   averageRating: number | null
+  sessionRate: number | null
+  reviewCount: number
   journeys: {
     id: string
     title: string
