@@ -253,35 +253,13 @@ export function GuideProfilePage() {
               </Section>
             )}
 
-            {/* Session info */}
-            <Section title="Session Info">
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#070738]/55">Rate</span>
-                  <span className="font-bold text-[#070738]">{price}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#070738]/55">Format</span>
-                  <span className="text-[#070738]">1:1 Online</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#070738]/55">Sessions done</span>
-                  <span className="text-[#070738]">{guide.totalSessions}</span>
-                </div>
-                {guide.languages?.length > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#070738]/55">Languages</span>
-                    <span className="text-[#070738]">{guide.languages.join(', ')}</span>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => navigate(`/guides/${guide.id}/book`)}
-                className="mt-5 flex w-full items-center justify-center gap-2 h-11 bg-[#070738] text-white text-sm font-semibold rounded-xl hover:bg-[#070738]/90 transition-colors"
-              >
-                <Calendar className="h-4 w-4" /> Book a Session
-              </button>
-            </Section>
+            {/* Book CTA */}
+            <button
+              onClick={() => navigate(`/guides/${guide.id}/book`)}
+              className="flex w-full items-center justify-center gap-2 h-11 bg-[#070738] text-white text-sm font-semibold rounded-xl hover:bg-[#070738]/90 transition-colors"
+            >
+              <Calendar className="h-4 w-4" /> Book a Session
+            </button>
 
           </div>
         </div>
