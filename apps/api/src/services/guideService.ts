@@ -1,5 +1,6 @@
 import { guideRepository } from '../repositories/guideRepository'
 import { AppError } from '../utils/errors'
+import { getSignedUrl } from '../utils/s3'
 
 const DEFAULT_PAGE_SIZE = 20
 
@@ -69,9 +70,15 @@ export const guideService = {
       throw new AppError('Guide not found', 404)
     }
 
+    let resumeSignedUrl: string | null = null
+    if (guide.resumeIsPublic && guide.resumeUrl) {
+      resumeSignedUrl = await getSignedUrl(guide.resumeUrl)
+    }
+
     return {
       id: guide.id,
       name: `${guide.user.firstName} ${guide.user.lastName}`,
+      bio: guide.user.bio ?? null,
       headline: guide.headline,
       currentRole: guide.currentRole,
       currentCompany: guide.currentCompany,
@@ -79,8 +86,32 @@ export const guideService = {
       graduationYear: guide.graduationYear,
       languages: guide.languages,
       specializations: guide.specializations,
+      sessionRate: guide.sessionRate,
       totalSessions: guide.totalSessions,
       averageRating: guide.averageRating,
+      reviewCount: guide.reviews.length,
+      linkedinUrl: guide.linkedinUrl ?? null,
+      githubUrl: guide.githubUrl ?? null,
+      resumeFileName: guide.resumeFileName ?? null,
+      resumeIsPublic: guide.resumeIsPublic,
+      resumeSignedUrl,
+      education: guide.education.map((e) => ({
+        id: e.id,
+        school: e.school,
+        degree: e.degree,
+        major: e.major,
+        startYear: e.startYear,
+        endYear: e.endYear ?? null,
+      })),
+      experience: guide.experience.map((e) => ({
+        id: e.id,
+        organization: e.organization,
+        role: e.role,
+        responsibilities: e.responsibilities,
+        startYear: e.startYear,
+        endYear: e.endYear ?? null,
+        isCurrent: e.isCurrent,
+      })),
       journeys: guide.journeys
         .slice()
         .sort((a, b) => b.year - a.year)

@@ -90,6 +90,8 @@ export const guideRepository = {
         user: true,
         journeys: true,
         reviews: true,
+        education: { orderBy: { startYear: 'desc' } },
+        experience: { orderBy: { startYear: 'desc' } },
       },
     })
   },

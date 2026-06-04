@@ -49,9 +49,30 @@ export function useGuides(params?: {
 }
 
 export interface GuideProfile extends Omit<GuideListItem, 'journeys'> {
-  currentRole: string
   currentCompany: string | null
   graduationYear: number | null
+  linkedinUrl: string | null
+  githubUrl: string | null
+  resumeFileName: string | null
+  resumeIsPublic: boolean
+  resumeSignedUrl: string | null
+  education: {
+    id: string
+    school: string
+    degree: string
+    major: string
+    startYear: number
+    endYear: number | null
+  }[]
+  experience: {
+    id: string
+    organization: string
+    role: string
+    responsibilities: string
+    startYear: number
+    endYear: number | null
+    isCurrent: boolean
+  }[]
   journeys: {
     id: string
     type: string
