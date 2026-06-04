@@ -253,13 +253,6 @@ export function GuideProfilePage() {
               </Section>
             )}
 
-            {/* Book CTA */}
-            <button
-              onClick={() => navigate(`/guides/${guide.id}/book`)}
-              className="flex w-full items-center justify-center gap-2 h-11 bg-[#070738] text-white text-sm font-semibold rounded-xl hover:bg-[#070738]/90 transition-colors"
-            >
-              <Calendar className="h-4 w-4" /> Book a Session
-            </button>
 
           </div>
         </div>
