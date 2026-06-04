@@ -17,7 +17,7 @@ function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
   const langLabel = langs.length > 1 ? `${langs[0]} +${langs.length - 1}` : langs[0]
 
   return (
-    <article className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200">
+    <article className="bg-[#f5f7fc] rounded-2xl border border-[#070738]/8 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200">
       {/* Avatar + name */}
       <div className="flex items-start gap-4 mb-4">
         <div className="flex-shrink-0 h-14 w-14 flex items-center justify-center rounded-full bg-[#070738] text-base font-bold text-[#F5B400]">
@@ -92,6 +92,8 @@ export function GuidesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null)
   const [sortBy, setSortBy] = useState<'highest_rated' | 'most_reviews' | 'price_high' | 'price_low'>('highest_rated')
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({
     university: [],
     specialization: [],
@@ -161,6 +163,9 @@ export function GuidesPage() {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
         setOpenFilter(null)
       }
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -189,8 +194,7 @@ export function GuidesPage() {
 
       {/* ── HERO — scrolls away ───────────────────────────────────────────── */}
       <div
-        style={{ background: 'linear-gradient(to bottom, rgba(7,7,56,0.14) 0%, #ffffff 100%)' }}
-        className="px-6 md:px-8 pt-8 pb-6"
+        className="px-6 md:px-8 pt-8 pb-6 bg-white"
       >
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#070738]">
@@ -325,8 +329,8 @@ export function GuidesPage() {
       </div>
 
       {/* ── CARDS ────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 bg-white px-6 md:px-10 py-10">
-        <div className="mx-auto max-w-6xl">
+      <div className="flex-1 bg-white px-6 md:px-8 py-6">
+        <div className="mx-auto max-w-7xl">
 
           {/* Sort + count row */}
           {!isLoading && guides.length > 0 && (
@@ -334,18 +338,39 @@ export function GuidesPage() {
               <span className="text-sm text-[#070738]/60">
                 Showing <span className="font-semibold text-[#070738]">{guides.length}</span> mentor{guides.length !== 1 ? 's' : ''}
               </span>
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="appearance-none pl-3 pr-8 py-2 text-sm font-medium text-[#070738] border border-[#070738]/20 rounded-lg bg-white hover:border-[#070738]/40 focus:outline-none focus:border-[#070738]/60 cursor-pointer transition-colors"
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => setSortOpen((o) => !o)}
+                  className="flex items-center gap-2 pl-3 pr-3 py-2 text-sm font-medium text-[#070738] border border-[#070738]/20 rounded-lg bg-white hover:border-[#070738]/40 transition-colors"
                 >
-                  <option value="highest_rated">Highest Rated</option>
-                  <option value="most_reviews">Most Reviews</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="price_low">Price: Low to High</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#070738]/50" />
+                  {sortBy === 'highest_rated' && 'Highest Rated'}
+                  {sortBy === 'most_reviews' && 'Most Reviews'}
+                  {sortBy === 'price_high' && 'Price: High to Low'}
+                  {sortBy === 'price_low' && 'Price: Low to High'}
+                  <ChevronDown className={`h-3.5 w-3.5 text-[#070738]/50 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {sortOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 z-30 w-48 rounded-xl border border-[#070738]/10 bg-white shadow-lg overflow-hidden">
+                    {([
+                      { value: 'highest_rated', label: 'Highest Rated' },
+                      { value: 'most_reviews', label: 'Most Reviews' },
+                      { value: 'price_high', label: 'Price: High to Low' },
+                      { value: 'price_low', label: 'Price: Low to High' },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { setSortBy(opt.value); setSortOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                          sortBy === opt.value
+                            ? 'bg-[#070738] text-white font-semibold'
+                            : 'text-[#070738] hover:bg-[#f4f6fc]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
