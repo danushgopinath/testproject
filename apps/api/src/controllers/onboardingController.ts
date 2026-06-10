@@ -27,3 +27,14 @@ export async function getOnboardingStatus(req: AuthenticatedRequest, res: Respon
   const result = await onboardingService.getOnboardingStatus(userId)
   res.json(result)
 }
+
+export async function updateAvailability(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Unauthorized', 401)
+  const availability = req.body?.availability
+  if (!availability || typeof availability !== 'object') {
+    throw new AppError('availability is required', 400)
+  }
+  const result = await onboardingService.updateAvailability(userId, availability)
+  res.json(result)
+}

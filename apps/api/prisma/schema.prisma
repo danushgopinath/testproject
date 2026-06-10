@@ -20,6 +20,12 @@ model User {
   googleId        String?   @unique
   linkedinId      String?   @unique
   authProvider    AuthProvider @default(EMAIL)
+  profileIsPublic            Boolean  @default(true)
+  notifySessionRequests      Boolean  @default(true)
+  notifySessionConfirmed     Boolean  @default(true)
+  notifySessionReminders     Boolean  @default(true)
+  notifyNewMessages          Boolean  @default(true)
+  notifyMarketing            Boolean  @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -28,6 +34,24 @@ model User {
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
   reviews          Review[]  @relation("UserReviews")
+  notifications    Notification[]
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  link      String?
+  sessionId String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
 }
 
 model GuideProfile {
@@ -129,6 +153,7 @@ model Session {
   durationMinutes Int
   topic           String
   notes           String?       @db.Text
+  totalCost       Int           @default(0)  // stored in cents; includes platform fee
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -197,5 +222,15 @@ enum SessionStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+}
+
+enum NotificationType {
+  SESSION_REQUEST
+  SESSION_ACCEPTED
+  SESSION_DECLINED
+  SESSION_REMINDER
+  SESSION_CANCELLED
+  NEW_MESSAGE
+  BOOKING_PLACED
 }
 

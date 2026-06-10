@@ -142,4 +142,17 @@ export const onboardingService = {
     })
     return { isComplete: profile !== null }
   },
+
+  async updateAvailability(userId: string, availability: Record<string, string[]>) {
+    const profile = await prisma.guideProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    })
+    if (!profile) throw new Error('Guide profile not found')
+    await prisma.guideProfile.update({
+      where: { userId },
+      data: { availability },
+    })
+    return { success: true }
+  },
 }

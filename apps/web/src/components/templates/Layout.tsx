@@ -3,7 +3,127 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 import { RoleSwitcher } from '../molecules/RoleSwitcher'
 import { useState, useEffect, useRef } from 'react'
-import { User, Settings, LogOut, Bell } from 'lucide-react'
+import { User, Settings, LogOut, Bell, MessageSquare, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { useNotifications } from '../../hooks/useDashboard'
+import { useNotificationsList, useMarkAllNotificationsRead, type NotificationItem, type NotificationType } from '../../hooks/useNotificationsList'
+
+function relativeTime(iso: string): string {
+  const now = Date.now()
+  const t = new Date(iso).getTime()
+  const diff = Math.max(0, now - t)
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min}m ago`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}d ago`
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+function iconForType(type: NotificationType) {
+  switch (type) {
+    case 'SESSION_REQUEST':   return Calendar
+    case 'SESSION_ACCEPTED':  return CheckCircle
+    case 'SESSION_DECLINED':  return XCircle
+    case 'SESSION_CANCELLED': return XCircle
+    case 'SESSION_REMINDER':  return Clock
+    case 'NEW_MESSAGE':       return MessageSquare
+    case 'BOOKING_PLACED':    return Clock
+    default:                  return Bell
+  }
+}
+
+function NotificationsPanel({
+  theme,
+  items,
+  unreadMessages,
+  onItemClick,
+  onMarkAll,
+}: {
+  theme: 'light' | 'dark'
+  items: NotificationItem[]
+  unreadMessages: number
+  onItemClick: (link: string | null) => void
+  onMarkAll: () => void
+}) {
+  const isDark = theme === 'dark'
+  const containerClass = isDark
+    ? 'absolute right-0 top-10 z-50 w-[22rem] max-h-[28rem] rounded-xl border border-white/10 bg-[#070738]/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col'
+    : 'absolute right-0 top-10 z-50 w-[22rem] max-h-[28rem] rounded-xl border border-[#070738]/10 bg-white shadow-xl overflow-hidden flex flex-col'
+  const headerBorder = isDark ? 'border-white/8' : 'border-[#070738]/8'
+  const titleColor = isDark ? 'text-white/50' : 'text-[#5B6B85]'
+  const itemHover = isDark ? 'hover:bg-white/5' : 'hover:bg-[#f4f6fc]'
+  const itemTextPrimary = isDark ? 'text-white' : 'text-[#070738]'
+  const itemTextSecondary = isDark ? 'text-white/55' : 'text-[#5B6B85]'
+  const itemTextMuted = isDark ? 'text-white/40' : 'text-[#070738]/40'
+  const iconColor = isDark ? 'text-[#F5B400]' : 'text-[#070738]'
+  const unreadDot = 'bg-[#F5B400]'
+  const emptyText = isDark ? 'text-white/50' : 'text-[#5B6B85]'
+  const dividerColor = isDark ? 'border-white/8' : 'border-[#070738]/8'
+
+  const hasItems = items.length > 0 || unreadMessages > 0
+
+  return (
+    <div className={containerClass}>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${headerBorder}`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider ${titleColor}`}>Notifications</p>
+        {items.some((n) => !n.isRead) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onMarkAll() }}
+            className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-[#F5B400] hover:opacity-80' : 'text-[#070738]/60 hover:text-[#070738]'}`}
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-1">
+        {unreadMessages > 0 && (
+          <button
+            onClick={() => onItemClick('/messages')}
+            className={`flex w-full items-start gap-3 px-4 py-3 text-left ${itemHover} transition-colors border-b ${dividerColor}`}
+          >
+            <MessageSquare className={`mt-0.5 h-4 w-4 shrink-0 ${iconColor}`} />
+            <div className="min-w-0 flex-1">
+              <p className={`text-sm font-medium ${itemTextPrimary}`}>
+                {unreadMessages} unread message{unreadMessages !== 1 ? 's' : ''}
+              </p>
+              <p className={`text-xs ${itemTextSecondary}`}>Open Messages</p>
+            </div>
+          </button>
+        )}
+
+        {items.map((n) => {
+          const Icon = iconForType(n.type)
+          return (
+            <button
+              key={n.id}
+              onClick={() => onItemClick(n.link)}
+              className={`flex w-full items-start gap-3 px-4 py-3 text-left ${itemHover} transition-colors`}
+            >
+              <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${iconColor}`} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className={`text-sm font-medium ${itemTextPrimary} truncate`}>{n.title}</p>
+                  {!n.isRead && <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${unreadDot}`} />}
+                </div>
+                <p className={`text-xs ${itemTextSecondary} line-clamp-2`}>{n.body}</p>
+                <p className={`mt-0.5 text-[10px] ${itemTextMuted}`}>{relativeTime(n.createdAt)}</p>
+              </div>
+            </button>
+          )
+        })}
+
+        {!hasItems && (
+          <div className="px-4 py-6 text-center">
+            <p className={`text-sm ${emptyText}`}>You're all caught up!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 
 // ── Landing pill nav link (unchanged) ─────────────────────────────────────────
@@ -13,22 +133,18 @@ function PillNavLink({ to, children, dark }: { to: string; children: React.React
       to={to}
       className={({ isActive }) =>
         isActive
-          ? `text-[#F5B400] text-xs font-medium uppercase tracking-widest`
+          ? 'group relative inline-block overflow-hidden text-xs font-medium uppercase tracking-widest'
           : 'group relative inline-block overflow-hidden text-xs font-medium uppercase tracking-widest'
       }
     >
-      {({ isActive }) =>
-        isActive ? (
-          <span>{children}</span>
-        ) : (
-          <span className="flex h-4 flex-col overflow-hidden">
-            <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
-              <span className={`leading-4 ${dark ? 'text-white/75' : 'text-[#070738]/60'}`}>{children}</span>
-              <span className={`leading-4 ${dark ? 'text-white' : 'text-[#070738]'}`}>{children}</span>
-            </span>
+      {({ isActive: _ }) => (
+        <span className="flex h-4 flex-col overflow-hidden">
+          <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+            <span className={`leading-4 ${dark ? 'text-white/75' : 'text-[#070738]/60'}`}>{children}</span>
+            <span className={`leading-4 ${dark ? 'text-white' : 'text-[#070738]'}`}>{children}</span>
           </span>
-        )
-      }
+        </span>
+      )}
     </NavLink>
   )
 }
@@ -57,14 +173,34 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout, dashboardRole, setDashboardRole } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
-  const isDashboard = location.pathname === '/dashboard'
+  // "Dashboard context" — anywhere the dashboard sidebar is shown.
+  // Role toggle should stay visible across all of these so users always
+  // know whether they're acting as a seeker or guide.
+  const isDashboard =
+    location.pathname === '/dashboard' ||
+    location.pathname.startsWith('/dashboard/') ||
+    location.pathname === '/sessions' ||
+    location.pathname === '/messages'
   const hideFooter = location.pathname === '/sessions' || location.pathname === '/messages'
-  const isLanding = location.pathname === '/'
+  const darkNavPages = ['/', '/how-it-works', '/privacy-policy', '/terms-of-service', '/cookie-policy', '/guides', '/team', '/contact']
+  const isLanding = darkNavPages.includes(location.pathname)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [showMobileNav, setShowMobileNav] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const notificationsRef = useRef<HTMLDivElement>(null)
   const shapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [pillShape, setPillShape] = useState('rounded-2xl')
+
+  const { data: notifs } = useNotifications()
+  const unreadMessages = notifs?.unreadMessages ?? 0
+  const unreadNotificationCount = notifs?.unreadNotificationCount ?? 0
+  const totalNotifCount = unreadMessages + unreadNotificationCount
+  const activeRole = (dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')
+  void activeRole
+
+  const { data: notifList } = useNotificationsList(Boolean(user))
+  const markAllRead = useMarkAllNotificationsRead()
 
   useEffect(() => {
     if (shapeTimeoutRef.current) clearTimeout(shapeTimeoutRef.current)
@@ -87,10 +223,13 @@ export function Layout({ children }: LayoutProps) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
     }
-    if (showUserMenu) document.addEventListener('mousedown', handleClickOutside)
+    if (showUserMenu || showNotifications) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu])
+  }, [showUserMenu, showNotifications])
 
   const navLinks = [
     { label: 'About', to: '/about' },
@@ -140,29 +279,56 @@ export function Layout({ children }: LayoutProps) {
                   <Link to="/dashboard" className="px-4 py-1.5 text-xs font-semibold uppercase tracking-widest rounded-full transition-all text-[#0f172a] bg-gradient-to-br from-gray-100 to-gray-300 hover:from-white hover:to-gray-200">
                     Dashboard
                   </Link>
-                  <div className="relative flex items-center gap-2" ref={userMenuRef}>
-                    <Link to="/messages" style={{ color: 'rgba(255,255,255,0.8)' }} className="relative flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:opacity-100">
-                      <Bell className="h-4 w-4" />
-                      <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F5B400] text-[9px] font-bold text-[#070738]">3</span>
-                    </Link>
-                    <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
-                      {user.firstName[0]}{user.lastName[0]}
-                    </button>
-                    {showUserMenu && (
-                      <div className="absolute right-0 top-10 z-50 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#070738]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-                        <div className="p-4 border-b border-white/8">
-                          <p className="font-medium text-sm" style={{ color: 'white' }}>{user.firstName} {user.lastName}</p>
-                          <p className="mt-0.5 break-all text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{user.email}</p>
+                  <div className="flex items-center gap-2">
+                    {/* Notifications bell */}
+                    <div className="relative" ref={notificationsRef}>
+                      <button
+                        onClick={() => { setShowNotifications((v) => !v); setShowUserMenu(false) }}
+                        style={{ color: 'rgba(255,255,255,0.8)' }}
+                        className="relative flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:opacity-100"
+                      >
+                        <Bell className="h-4 w-4" />
+                        {totalNotifCount > 0 && (
+                          <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F5B400] text-[9px] font-bold text-[#070738]">
+                            {totalNotifCount > 9 ? '9+' : totalNotifCount}
+                          </span>
+                        )}
+                      </button>
+                      {showNotifications && (
+                        <NotificationsPanel
+                          theme="dark"
+                          items={notifList ?? []}
+                          unreadMessages={unreadMessages}
+                          onItemClick={(link) => {
+                            setShowNotifications(false)
+                            markAllRead.mutate()
+                            if (link) navigate(link)
+                          }}
+                          onMarkAll={() => markAllRead.mutate()}
+                        />
+                      )}
+                    </div>
+                    {/* User menu */}
+                    <div className="relative" ref={userMenuRef}>
+                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </button>
+                      {showUserMenu && (
+                        <div className="absolute right-0 top-10 z-50 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#070738]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          <div className="p-4 border-b border-white/8">
+                            <p className="font-medium text-sm" style={{ color: 'white' }}>{user.firstName} {user.lastName}</p>
+                            <p className="mt-0.5 break-all text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{user.email}</p>
+                          </div>
+                          <div>
+                            <Link to="/profile" onClick={() => setShowUserMenu(false)} style={{ color: 'white' }} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"><User className="h-4 w-4" />Profile</Link>
+                            <Link to="/settings" onClick={() => setShowUserMenu(false)} style={{ color: 'white' }} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"><Settings className="h-4 w-4" />Settings</Link>
+                          </div>
+                          <div className="border-t border-white/8">
+                            <button onClick={handleLogout} style={{ color: '#f87171' }} className="flex w-full items-center gap-3 px-4 py-3 text-sm hover:bg-red-500/10 transition-colors"><LogOut className="h-4 w-4" />Logout</button>
+                          </div>
                         </div>
-                        <div>
-                          <Link to="/profile" onClick={() => setShowUserMenu(false)} style={{ color: 'white' }} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"><User className="h-4 w-4" />Profile</Link>
-                          <Link to="/settings" onClick={() => setShowUserMenu(false)} style={{ color: 'white' }} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"><Settings className="h-4 w-4" />Settings</Link>
-                        </div>
-                        <div className="border-t border-white/8">
-                          <button onClick={handleLogout} style={{ color: '#f87171' }} className="flex w-full items-center gap-3 px-4 py-3 text-sm hover:bg-red-500/10 transition-colors"><LogOut className="h-4 w-4" />Logout</button>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
@@ -260,29 +426,55 @@ export function Layout({ children }: LayoutProps) {
                   <Link to="/dashboard" className="px-3 py-1.5 text-xs font-medium border border-[#070738]/20 rounded-full text-[#070738]/70 hover:border-[#070738]/50 hover:text-[#070738] transition-colors">
                     Dashboard
                   </Link>
-                  <div className="relative flex items-center gap-2" ref={userMenuRef}>
-                    <Link to="/messages" className="relative flex h-7 w-7 items-center justify-center rounded-full transition-colors text-[#070738]/50 hover:text-[#070738]">
-                      <Bell className="h-4 w-4" />
-                      <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F5B400] text-[9px] font-bold text-[#070738]">3</span>
-                    </Link>
-                    <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
-                      {user.firstName[0]}{user.lastName[0]}
-                    </button>
-                    {showUserMenu && (
-                      <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-[#070738]/10 bg-white shadow-xl overflow-hidden">
-                        <div className="p-4 border-b border-[#070738]/8">
-                          <p className="font-medium text-[#070738] text-sm">{user.firstName} {user.lastName}</p>
-                          <p className="mt-0.5 break-all text-xs text-[#5B6B85]">{user.email}</p>
+                  <div className="flex items-center gap-2">
+                    {/* Notifications bell */}
+                    <div className="relative" ref={notificationsRef}>
+                      <button
+                        onClick={() => { setShowNotifications((v) => !v); setShowUserMenu(false) }}
+                        className="relative flex h-7 w-7 items-center justify-center rounded-full transition-colors text-[#070738]/50 hover:text-[#070738]"
+                      >
+                        <Bell className="h-4 w-4" />
+                        {totalNotifCount > 0 && (
+                          <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F5B400] text-[9px] font-bold text-[#070738]">
+                            {totalNotifCount > 9 ? '9+' : totalNotifCount}
+                          </span>
+                        )}
+                      </button>
+                      {showNotifications && (
+                        <NotificationsPanel
+                          theme="light"
+                          items={notifList ?? []}
+                          unreadMessages={unreadMessages}
+                          onItemClick={(link) => {
+                            setShowNotifications(false)
+                            markAllRead.mutate()
+                            if (link) navigate(link)
+                          }}
+                          onMarkAll={() => markAllRead.mutate()}
+                        />
+                      )}
+                    </div>
+                    {/* User menu */}
+                    <div className="relative" ref={userMenuRef}>
+                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </button>
+                      {showUserMenu && (
+                        <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-[#070738]/10 bg-white shadow-xl overflow-hidden">
+                          <div className="p-4 border-b border-[#070738]/8">
+                            <p className="font-medium text-[#070738] text-sm">{user.firstName} {user.lastName}</p>
+                            <p className="mt-0.5 break-all text-xs text-[#5B6B85]">{user.email}</p>
+                          </div>
+                          <div>
+                            <Link to="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] transition-colors"><User className="h-4 w-4" />Profile</Link>
+                            <Link to="/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] transition-colors"><Settings className="h-4 w-4" />Settings</Link>
+                          </div>
+                          <div className="border-t border-[#070738]/8">
+                            <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"><LogOut className="h-4 w-4" />Logout</button>
+                          </div>
                         </div>
-                        <div>
-                          <Link to="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] transition-colors"><User className="h-4 w-4" />Profile</Link>
-                          <Link to="/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-[#5B6B85] hover:text-[#070738] hover:bg-[#f4f6fc] transition-colors"><Settings className="h-4 w-4" />Settings</Link>
-                        </div>
-                        <div className="border-t border-[#070738]/8">
-                          <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"><LogOut className="h-4 w-4" />Logout</button>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
@@ -394,8 +586,12 @@ export function Layout({ children }: LayoutProps) {
               <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#070738]">Legal</p>
                 <ul className="space-y-3">
-                  {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map((label) => (
-                    <li key={label}><button className="text-sm text-[#5B6B85] hover:text-[#070738] transition-colors">{label}</button></li>
+                  {[
+                    { label: 'Privacy Policy', to: '/privacy-policy' },
+                    { label: 'Terms of Service', to: '/terms-of-service' },
+                    { label: 'Cookie Policy', to: '/cookie-policy' },
+                  ].map(({ label, to }) => (
+                    <li key={label}><Link to={to} className="text-sm text-[#5B6B85] hover:text-[#070738] transition-colors">{label}</Link></li>
                   ))}
                 </ul>
               </div>

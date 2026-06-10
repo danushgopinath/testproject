@@ -4,8 +4,10 @@ import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, G
 import { Link, useSearchParams } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
-import { useGuideDashboard, useSeekerDashboard } from '../hooks/useDashboard'
+import { useGuideDashboard, useMyProfile, useSeekerDashboard } from '../hooks/useDashboard'
+import { useAcceptSession, useDeclineSession } from '../hooks/useSessions'
 import { onboardingApi } from '../services/onboardingService'
+import { useQueryClient } from '@tanstack/react-query'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
@@ -18,6 +20,11 @@ export function DashboardPage() {
   const [showAvailability, setShowAvailability] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [dayTimes, setDayTimes] = useState<Record<string, string[]>>({})
+  const [savingAvailability, setSavingAvailability] = useState(false)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+
+  const { data: myProfile } = useMyProfile()
+  const queryClient = useQueryClient()
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const timeOptions = Array.from({ length: 24 }, (_, hour) => `${hour.toString().padStart(2, '0')}:00`)
@@ -73,6 +80,46 @@ export function DashboardPage() {
   const activeRole: DashboardRole =
     (dashboardRole as DashboardRole | null) || ((user?.role as DashboardRole | undefined) ?? 'SEEKER')
 
+  // Pre-populate availability modal from saved profile when opened
+  useEffect(() => {
+    if (!showAvailability) return
+    const saved = myProfile?.guide?.availability ?? null
+    if (saved && typeof saved === 'object') {
+      const days = Object.keys(saved).sort((a, b) => daysOfWeek.indexOf(a) - daysOfWeek.indexOf(b))
+      setSelectedDays(days)
+      setDayTimes(saved as Record<string, string[]>)
+    } else {
+      setSelectedDays([])
+      setDayTimes({})
+    }
+    setAvailabilityError(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAvailability])
+
+  const handleSaveAvailability = async () => {
+    setSavingAvailability(true)
+    setAvailabilityError(null)
+    try {
+      // Build payload: only days with at least one selected slot
+      const payload: Record<string, string[]> = {}
+      for (const day of selectedDays) {
+        const slots = dayTimes[day] ?? []
+        if (slots.length > 0) payload[day] = slots
+      }
+      await onboardingApi.updateAvailability(payload)
+      // Refresh caches so booking page and dashboard see new availability
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['me', 'profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['guides'] }),
+      ])
+      setShowAvailability(false)
+    } catch {
+      setAvailabilityError('Failed to save availability. Please try again.')
+    } finally {
+      setSavingAvailability(false)
+    }
+  }
+
   // Auto-toggle to mentor mode if coming from "Become a Mentor"
   useEffect(() => {
     const becomeMentor = searchParams.get('becomeMentor') === 'true' || sessionStorage.getItem('becomeMentor') === 'true'
@@ -101,12 +148,15 @@ export function DashboardPage() {
 
   // Always call hooks unconditionally — must be before any early return
   const { data: seekerDashboard, isLoading: isSeekerLoading } = useSeekerDashboard(
-    Boolean(user) && activeRole === 'SEEKER' && isOnboardingComplete === true,
+    Boolean(user) && activeRole === 'SEEKER',
   )
 
   const { data: guideDashboard, isLoading: isGuideLoading } = useGuideDashboard(
     Boolean(user) && activeRole === 'GUIDE' && isOnboardingComplete === true,
   )
+
+  const acceptSession = useAcceptSession()
+  const declineSession = useDeclineSession()
 
   // While checking onboarding status, show a spinner
   if (activeRole === 'GUIDE' && isOnboardingComplete === null) {
@@ -149,6 +199,7 @@ export function DashboardPage() {
       const status = s.status === 'CONFIRMED' ? 'confirmed' : 'pending'
       return {
         id: s.id,
+        otherUserId: s.otherUserId,
         name: s.name,
         initials: s.initials,
         role: s.headline,
@@ -169,6 +220,7 @@ export function DashboardPage() {
       const status = s.status === 'CONFIRMED' ? 'confirmed' : 'pending'
       return {
         id: s.id,
+        otherUserId: s.otherUserId,
         name: s.name,
         initials: s.initials,
         role: s.role,
@@ -414,13 +466,13 @@ export function DashboardPage() {
                 )}
                 {seekerUpcomingSessions.map((session) => (
                   <div key={session.id} className="rounded-lg border border-border bg-background p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                           {session.initials}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-medium text-text-primary">{session.name}</h3>
                             {getStatusBadge(session.status)}
                           </div>
@@ -442,15 +494,23 @@ export function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <button
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                          session.action === 'Join'
-                            ? 'bg-primary text-white hover:bg-primary/90'
-                            : 'border border-border bg-surface text-text-primary hover:bg-background'
-                        }`}
-                      >
-                        {session.action}
-                      </button>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <Link
+                          to={`/messages?with=${session.otherUserId}`}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text-primary hover:bg-background transition-colors"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" /> Message
+                        </Link>
+                        <button
+                          className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                            session.action === 'Join'
+                              ? 'bg-primary text-white hover:bg-primary/90'
+                              : 'border border-border bg-surface text-text-primary hover:bg-background'
+                          }`}
+                        >
+                          {session.action}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -473,13 +533,13 @@ export function DashboardPage() {
                   )}
                   {guideUpcomingSessions.map((session) => (
                     <div key={session.id} className="rounded-lg border border-border bg-background p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                             {session.initials}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-medium text-text-primary">{session.name}</h3>
                               {getStatusBadge(session.status)}
                             </div>
@@ -501,15 +561,23 @@ export function DashboardPage() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                            session.action === 'Join' || session.action === 'Accept'
-                              ? 'bg-primary text-white hover:bg-primary/90'
-                              : 'border border-border bg-surface text-text-primary hover:bg-background'
-                          }`}
-                        >
-                          {session.action}
-                        </button>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <Link
+                            to={`/messages?with=${session.otherUserId}`}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text-primary hover:bg-background transition-colors"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" /> Message
+                          </Link>
+                          <button
+                            className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                              session.action === 'Join' || session.action === 'Accept'
+                                ? 'bg-primary text-white hover:bg-primary/90'
+                                : 'border border-border bg-surface text-text-primary hover:bg-background'
+                            }`}
+                          >
+                            {session.action}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -560,10 +628,18 @@ export function DashboardPage() {
                         <div className="ml-4 flex flex-col gap-2">
                           <span className="text-xs text-text-muted">{request.timeAgo}</span>
                           <div className="flex gap-2">
-                            <button className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100">
+                            <button
+                              disabled={declineSession.isPending || acceptSession.isPending}
+                              onClick={() => declineSession.mutate(request.id)}
+                              className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
+                            >
                               ✕ Decline
                             </button>
-                            <button className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary/90">
+                            <button
+                              disabled={acceptSession.isPending || declineSession.isPending}
+                              onClick={() => acceptSession.mutate(request.id)}
+                              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                            >
                               ✓ Accept
                             </button>
                           </div>
@@ -721,24 +797,30 @@ export function DashboardPage() {
               })}
             </div>
 
+            {availabilityError && (
+              <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                {availabilityError}
+              </p>
+            )}
+
             {/* Modal actions */}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowAvailability(false)}
-                className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-5 py-2 text-xs font-semibold text-text-primary transition-colors hover:bg-background"
+                disabled={savingAvailability}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-white px-5 py-2 text-xs font-semibold text-text-primary transition-colors hover:bg-background disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  console.log('Availability saved', { selectedDays, dayTimes })
-                  setShowAvailability(false)
-                }}
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
+                onClick={handleSaveAvailability}
+                disabled={savingAvailability}
+                style={{ color: 'white' }}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2 text-xs font-semibold transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
-                Save availability
+                {savingAvailability ? 'Saving…' : 'Save availability'}
               </button>
             </div>
           </div>

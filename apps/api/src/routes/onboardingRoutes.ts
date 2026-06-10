@@ -9,5 +9,6 @@ const router = Router()
 router.post('/', requireAuth, catchAsync(onboardingController.submitOnboarding))
 router.get('/me', requireAuth, catchAsync(onboardingController.getMyProfile))
 router.get('/status', requireAuth, catchAsync(onboardingController.getOnboardingStatus))
+router.patch('/availability', requireAuth, catchAsync(onboardingController.updateAvailability))
 
 export { router as onboardingRoutes }

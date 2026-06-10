@@ -11,13 +11,23 @@ import { DashboardPage } from './pages/DashboardPage'
 import { MessagesPage } from './pages/MessagesPage'
 import { SessionsPage } from './pages/SessionsPage'
 import { ProfileSettingsPage } from './pages/settings/ProfileSettingsPage'
+import { PasswordSettingsPage } from './pages/settings/PasswordSettingsPage'
+import { NotificationsSettingsPage } from './pages/settings/NotificationsSettingsPage'
+import { PrivacySettingsPage } from './pages/settings/PrivacySettingsPage'
+import { BillingSettingsPage } from './pages/settings/BillingSettingsPage'
+import { LanguageSettingsPage } from './pages/settings/LanguageSettingsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { HowItWorksPage } from './pages/HowItWorksPage'
+import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage'
+import { TermsOfServicePage } from './pages/legal/TermsOfServicePage'
+import { CookiePolicyPage } from './pages/legal/CookiePolicyPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BookSessionPage } from './pages/BookSessionPage'
 import { AboutPage } from './pages/AboutPage'
 import { TeamPage } from './pages/TeamPage'
 import { ContactPage } from './pages/ContactPage'
 import { RequestsPage } from './pages/RequestsPage'
+import { SeekerRequestsPage } from './pages/SeekerRequestsPage'
 import { SpendingAnalyticsPage } from './pages/analytics/SpendingAnalyticsPage'
 import { MentorsAnalyticsPage } from './pages/analytics/MentorsAnalyticsPage'
 import { SessionHistoryPage } from './pages/analytics/SessionHistoryPage'
@@ -91,6 +101,10 @@ export function App() {
           }
         />
         <Route path="/team" element={<TeamPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
         <Route path="/contact" element={<ContactPage />} />
 
         {/* Auth routes — redirect to dashboard if already logged in */}
@@ -101,6 +115,7 @@ export function App() {
         {/* Protected routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/dashboard/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/seeker-requests" element={<ProtectedRoute><SeekerRequestsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/spending" element={<ProtectedRoute><SpendingAnalyticsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/mentors" element={<ProtectedRoute><MentorsAnalyticsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/sessions" element={<ProtectedRoute><SessionHistoryPage /></ProtectedRoute>} />
@@ -112,6 +127,11 @@ export function App() {
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/settings/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/password" element={<ProtectedRoute><PasswordSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/notifications" element={<ProtectedRoute><NotificationsSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/billing" element={<ProtectedRoute><BillingSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/language" element={<ProtectedRoute><LanguageSettingsPage /></ProtectedRoute>} />
       </Routes>
     </Layout>
   )

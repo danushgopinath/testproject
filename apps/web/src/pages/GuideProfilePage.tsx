@@ -21,7 +21,7 @@ export function GuideProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-12 text-sm text-[#070738]/50">
+      <div className="mx-auto max-w-7xl px-4 py-12 text-sm text-[#070738]/50">
         Loading mentor profile…
       </div>
     )
@@ -29,7 +29,7 @@ export function GuideProfilePage() {
 
   if (isError || !guide) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-12">
+      <div className="mx-auto max-w-7xl px-4 py-12">
         <button onClick={() => navigate('/guides')} className="flex items-center gap-2 text-sm text-[#070738]/60 hover:text-[#070738]">
           <ArrowLeft className="h-4 w-4" /> Back to mentors
         </button>
@@ -46,7 +46,7 @@ export function GuideProfilePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-5xl px-6 py-8 md:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
 
         {/* Back */}
         <button

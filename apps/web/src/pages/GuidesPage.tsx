@@ -192,43 +192,57 @@ export function GuidesPage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-white">
 
-      {/* ── HERO — scrolls away ───────────────────────────────────────────── */}
-      <div
-        className="px-6 md:px-8 pt-8 pb-6 bg-white"
-      >
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#070738]">
-            Find Your Perfect Mentor
+      {/* ── HERO — dark navy, flows into floating navbar ───────────────── */}
+      <div className="bg-[#070738] px-6 md:px-10 pt-32 pb-14">
+        <div className="mx-auto max-w-4xl">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <span className="h-px w-8 bg-[#F5B400]" />
+            <span className="text-[#F5B400] text-xs uppercase tracking-[0.3em] font-medium">Browse</span>
+            <span className="h-px w-8 bg-[#F5B400]" />
+          </div>
+          <h1
+            className="font-display font-semibold text-white leading-[0.95] tracking-tight"
+            style={{ fontSize: 'clamp(36px, 6vw, 72px)' }}
+          >
+            Find your
+            <br />
+            <em className="text-[#F5B400]" style={{ fontStyle: 'italic' }}>perfect guide.</em>
           </h1>
-          <p className="mx-auto mt-1.5 max-w-xl text-sm text-[#070738]/60 leading-relaxed">
-            Connect with experienced professionals and alumni who can guide your academic and career journey.
-          </p>
         </div>
       </div>
 
-      {/* ── STICKY SEARCH + FILTERS ──────────────────────────────────────── */}
+      {/* ── STICKY CONTAINER: search + cards lock together ───────────────── */}
+      <div className="sticky top-[80px] z-40 flex flex-col bg-white" style={{ height: 'calc(100vh - 80px)' }}>
+
+      {/* Search + filters */}
       <div
-        className="sticky top-[61px] z-40 bg-white border-b border-[#070738]/8 px-6 md:px-8 pt-4 pb-4 shadow-sm"
+        className="flex-none bg-white border-b border-[#070738]/8 px-6 md:px-8 pt-4 pb-4 shadow-sm"
         ref={filterRef}
       >
         <div className="mx-auto max-w-3xl">
 
           {/* Search bar */}
-          <div style={{ outline: 'none' }} className="flex items-center gap-2 rounded-lg border border-[#070738]/15 bg-white px-4 py-2.5 shadow-sm focus-within:border-[#070738]/40 focus-within:shadow-md transition-all">
-            <Search className="h-4 w-4 flex-shrink-0 text-[#070738]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, expertise, university, or field..."
-              style={{ outline: 'none', boxShadow: 'none' }}
-              className="w-full border-0 bg-transparent text-sm text-[#070738] placeholder:text-[#070738]/60"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="text-[#070738] hover:text-[#070738] transition-colors">
-                <X className="h-4 w-4" />
-              </button>
-            )}
+          <div className="flex items-center gap-3">
+            <div style={{ outline: 'none' }} className="flex flex-1 items-center gap-2 rounded-lg border border-[#070738]/15 bg-white px-4 py-2.5 shadow-sm focus-within:border-[#070738]/40 focus-within:shadow-md transition-all">
+              <Search className="h-4 w-4 flex-shrink-0 text-[#070738]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name, expertise, university, or field..."
+                style={{ outline: 'none', boxShadow: 'none' }}
+                className="w-full border-0 bg-transparent text-sm text-[#070738] placeholder:text-[#070738]/60"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-[#070738]/40 hover:text-[#070738] transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <button className="flex-shrink-0 flex items-center gap-1.5 rounded-lg bg-[#070738] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#070738]/90 transition-colors shadow-sm">
+              <Search className="h-4 w-4" />
+              Search
+            </button>
           </div>
 
           {/* Popular searches */}
@@ -328,8 +342,8 @@ export function GuidesPage() {
         )}
       </div>
 
-      {/* ── CARDS ────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 bg-white px-6 md:px-8 py-6">
+      {/* ── CARDS — only this scrolls ──────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto min-h-0 bg-white px-6 md:px-8 py-6">
         <div className="mx-auto max-w-7xl">
 
           {/* Sort + count row */}
@@ -405,6 +419,7 @@ export function GuidesPage() {
           </div>
         </div>
       </div>
+      </div>{/* end sticky container */}
     </div>
   )
 }

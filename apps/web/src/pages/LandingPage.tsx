@@ -133,17 +133,17 @@ export function LandingPage() {
   return (
     <div className="w-full">
 
-      {/* ── 1. HERO — full viewport, content offset below fixed navbar ── */}
+      {/* ── 1. HERO — fully adaptive: scales with both vw AND vh ── */}
       <BeamsBackground className="h-dvh flex flex-col justify-center">
         <div
           className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col items-center text-center"
-          style={{ paddingTop: 'clamp(5rem, 14vh, 10rem)' }}
+          style={{ paddingTop: 'clamp(4rem, 12vh, 9rem)' }}
         >
 
           {/* Eyebrow */}
           <div
-            className="animate-fade-up inline-flex items-center gap-3 mb-4 md:mb-10"
-            style={{ animationDelay: '0ms' }}
+            className="animate-fade-up inline-flex items-center gap-3"
+            style={{ marginBottom: 'clamp(0.5rem, 2vh, 2.5rem)', animationDelay: '0ms' }}
           >
             <span className="h-px w-8 bg-[#F5B400]" />
             <span className="text-[#F5B400] text-xs uppercase tracking-[0.3em] font-medium">
@@ -152,15 +152,14 @@ export function LandingPage() {
             <span className="h-px w-8 bg-[#F5B400]" />
           </div>
 
-          {/* Headline — scales with vw: 390px→60px, 360px→55px, 1366px→110px */}
+          {/* Headline — constrained by BOTH vw and vh so it never overflows */}
           <h1
             className="animate-fade-up font-display font-semibold leading-[0.95] tracking-tight text-white"
             style={{
-              fontSize: 'clamp(28px, 15.4vw, 110px)',
+              fontSize: 'clamp(28px, min(15.4vw, 12vh), 110px)',
               animationDelay: '100ms',
             }}
           >
-            {/* Mobile: "from" wraps to its own line. Desktop: stays inline. */}
             Get guidance<span className="hidden md:inline"> from</span>
             <br />
             <span className="inline md:hidden">from<br /></span>
@@ -173,8 +172,8 @@ export function LandingPage() {
 
           {/* Subline */}
           <p
-            className="animate-fade-up mt-3 md:mt-8 text-white/55 text-sm md:text-base lg:text-lg max-w-xl leading-relaxed"
-            style={{ animationDelay: '220ms' }}
+            className="animate-fade-up text-white/55 text-sm md:text-base lg:text-lg max-w-xl leading-relaxed"
+            style={{ marginTop: 'clamp(0.5rem, 2.5vh, 2rem)', animationDelay: '220ms' }}
           >
             One conversation with the right person beats a hundred articles.
             Book one-on-one sessions with alumni and professionals from the world's top programs.
@@ -182,18 +181,18 @@ export function LandingPage() {
 
           {/* CTAs */}
           <div
-            className="animate-fade-up mt-5 md:mt-10 flex flex-wrap gap-4 justify-center"
-            style={{ animationDelay: '340ms' }}
+            className="animate-fade-up flex flex-wrap gap-4 justify-center"
+            style={{ marginTop: 'clamp(0.75rem, 3.5vh, 2.5rem)', animationDelay: '340ms' }}
           >
             <Link to="/guides">
-              <button className="h-12 px-7 bg-[#F5B400] text-[#070738] text-sm font-semibold flex items-center gap-2.5 hover:bg-[#F5B400]/90 transition-colors">
+              <button className="h-11 px-7 bg-[#F5B400] text-[#070738] text-sm font-semibold flex items-center gap-2.5 hover:bg-[#F5B400]/90 transition-colors">
                 Find a Guide
                 <ArrowRight className="h-4 w-4" />
               </button>
             </Link>
             <button
               onClick={handleBecomeMentor}
-              className="h-12 px-7 border border-white/20 text-white text-sm font-medium hover:border-white/40 hover:bg-white/5 transition-all"
+              className="h-11 px-7 border border-white/20 text-white text-sm font-medium hover:border-white/40 hover:bg-white/5 transition-all"
             >
               Share Your Journey
             </button>

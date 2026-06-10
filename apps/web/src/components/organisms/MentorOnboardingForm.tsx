@@ -166,7 +166,7 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-text-primary">Become a Mentor</h1>
@@ -493,7 +493,7 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
                   <textarea
                     value={exp.responsibilities}
                     onChange={(e) => updateExp(i, { responsibilities: e.target.value })}
-                    rows={2}
+                    rows={5}
                     className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"
                     placeholder="Describe your key responsibilities and achievements..."
                   />

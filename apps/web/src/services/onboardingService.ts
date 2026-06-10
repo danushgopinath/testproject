@@ -48,4 +48,9 @@ export const onboardingApi = {
     const res = await apiClient.post('/onboarding', payload)
     return res.data
   },
+
+  async updateAvailability(availability: Record<string, string[]>): Promise<{ success: boolean }> {
+    const res = await apiClient.patch('/onboarding/availability', { availability })
+    return res.data
+  },
 }
