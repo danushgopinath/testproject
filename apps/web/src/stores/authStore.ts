@@ -37,6 +37,7 @@ interface AuthState {
   logout: () => Promise<void>
   initialize: () => Promise<void>
   setDashboardRole: (role: 'SEEKER' | 'GUIDE') => void
+  setAvatarUrl: (avatarUrl: string | null) => void
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -151,6 +152,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   setDashboardRole: (role) => {
     set({ dashboardRole: role })
+  },
+
+  setAvatarUrl: (avatarUrl) => {
+    const current = get().user
+    if (!current) return
+    set({ user: { ...current, avatarUrl } })
   },
 }))
 

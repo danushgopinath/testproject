@@ -3,14 +3,18 @@ import { useAuthStore } from '../stores/authStore'
 import { GraduationCap, Star, MessageSquare, Camera, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useMyProfile } from '../hooks/useDashboard'
+import { apiClient } from '../services/apiClient'
 
 export function ProfilePage() {
-  const { user } = useAuthStore()
+  const { user, setAvatarUrl } = useAuthStore()
   const { data: profile, isLoading } = useMyProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`
+  const displayedAvatar = avatarPreview ?? user?.avatarUrl ?? null
 
   const joinedLabel = profile?.joinedAt
     ? new Date(profile.joinedAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
@@ -28,12 +32,45 @@ export function ProfilePage() {
       : guide.currentRole
     : null
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
+    setAvatarError(null)
+
+    // Client-side validation
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      setAvatarError('Use a JPG, PNG, WEBP, or GIF.')
+      e.target.value = ''
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Image is too large. Max 5 MB.')
+      e.target.value = ''
+      return
+    }
+
+    // Read as DataURL → show preview while uploading
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (ev) => resolve(ev.target?.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    setAvatarPreview(dataUrl)
+
+    // Upload to backend → S3
+    setUploadingAvatar(true)
+    try {
+      const res = await apiClient.post<{ avatarUrl: string }>('/users/me/avatar', { avatarData: dataUrl })
+      setAvatarUrl(res.data.avatarUrl)
+      setAvatarPreview(null) // now backed by the real URL on the user object
+    } catch (err: any) {
+      setAvatarPreview(null)
+      setAvatarError(err?.response?.data?.message ?? 'Upload failed. Please try again.')
+    } finally {
+      setUploadingAvatar(false)
+      e.target.value = ''
+    }
   }
 
   if (isLoading) {
@@ -65,9 +102,9 @@ export function ProfilePage() {
           {/* Avatar — overlaps the banner */}
           <div className="relative -mt-12 mb-4 inline-block">
             <div className="relative h-20 w-20 rounded-full ring-4 ring-surface">
-              {avatarPreview ? (
+              {displayedAvatar ? (
                 <img
-                  src={avatarPreview}
+                  src={displayedAvatar}
                   alt="avatar"
                   className="h-20 w-20 rounded-full object-cover"
                 />
@@ -76,11 +113,17 @@ export function ProfilePage() {
                   {initials}
                 </div>
               )}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                </div>
+              )}
               {/* Camera overlay */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md border border-border text-text-muted hover:text-primary transition-colors"
+                disabled={uploadingAvatar}
+                className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md border border-border text-text-muted hover:text-primary transition-colors disabled:opacity-50"
                 title="Change photo"
               >
                 <Camera className="h-3.5 w-3.5" />
@@ -88,11 +131,14 @@ export function ProfilePage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif"
                 className="hidden"
                 onChange={handleImageChange}
               />
             </div>
+            {avatarError && (
+              <p className="mt-2 text-xs text-red-600">{avatarError}</p>
+            )}
           </div>
 
           {/* Name / email / role  +  joined pill */}

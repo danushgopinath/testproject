@@ -84,3 +84,16 @@ export async function deleteAccount(req: AuthenticatedRequest, res: Response) {
   res.clearCookie('refreshToken')
   res.json({ message: 'Account deleted successfully' })
 }
+
+export async function uploadAvatar(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Missing user context', 401)
+
+  const { avatarData } = req.body as { avatarData?: string }
+  if (!avatarData || typeof avatarData !== 'string') {
+    throw new AppError('avatarData (data URL) is required', 400)
+  }
+
+  const result = await userService.uploadAvatar(userId, avatarData)
+  res.json(result)
+}

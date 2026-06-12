@@ -11,5 +11,6 @@ router.patch('/me/password', requireAuth, catchAsync(userController.changePasswo
 router.patch('/me/notifications', requireAuth, catchAsync(userController.updateNotifications))
 router.patch('/me/privacy', requireAuth, catchAsync(userController.updatePrivacy))
 router.delete('/me', requireAuth, catchAsync(userController.deleteAccount))
+router.post('/me/avatar', requireAuth, catchAsync(userController.uploadAvatar))
 
 export { router as userRoutes }

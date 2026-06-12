@@ -310,8 +310,12 @@ export function Layout({ children }: LayoutProps) {
                     </div>
                     {/* User menu */}
                     <div className="relative" ref={userMenuRef}>
-                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
-                        {user.firstName[0]}{user.lastName[0]}
+                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
+                        {user.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="" className="h-7 w-7 object-cover" />
+                        ) : (
+                          <>{user.firstName[0]}{user.lastName[0]}</>
+                        )}
                       </button>
                       {showUserMenu && (
                         <div className="absolute right-0 top-10 z-50 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#070738]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
@@ -456,8 +460,12 @@ export function Layout({ children }: LayoutProps) {
                     </div>
                     {/* User menu */}
                     <div className="relative" ref={userMenuRef}>
-                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
-                        {user.firstName[0]}{user.lastName[0]}
+                      <button onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }} className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-[#F5B400] text-[10px] font-bold text-[#070738] hover:opacity-90 transition-opacity">
+                        {user.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="" className="h-7 w-7 object-cover" />
+                        ) : (
+                          <>{user.firstName[0]}{user.lastName[0]}</>
+                        )}
                       </button>
                       {showUserMenu && (
                         <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-[#070738]/10 bg-white shadow-xl overflow-hidden">

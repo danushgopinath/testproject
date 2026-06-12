@@ -6,6 +6,7 @@ import { userRepository } from '../repositories/userRepository'
 import { AppError, AuthError, ValidationError } from '../utils/errors'
 import { env } from '../config/env'
 import { logger } from '../config/logger'
+import { getSignedUrl } from '../utils/s3'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -44,14 +45,31 @@ function setRefreshCookie(res: Response, refreshToken: string) {
   })
 }
 
-function sanitizeUser(user: { id: string; email: string; role: string; firstName: string; lastName: string; avatarUrl?: string | null }) {
+async function sanitizeUser(user: { id: string; email: string; role: string; firstName: string; lastName: string; avatarUrl?: string | null }) {
   return {
     id: user.id,
     email: user.email,
     role: user.role,
     firstName: user.firstName,
     lastName: user.lastName,
-    avatarUrl: user.avatarUrl ?? null,
+    avatarUrl: await resolveAvatarUrl(user.avatarUrl ?? null),
+  }
+}
+
+/**
+ * `User.avatarUrl` stores either:
+ *   - a full external URL (Google/LinkedIn profile pictures), or
+ *   - an S3 object key like "avatars/{userId}/{ts}-{file}"
+ * If it's an S3 key we resolve to a presigned download URL (24h).
+ */
+async function resolveAvatarUrl(value: string | null): Promise<string | null> {
+  if (!value) return null
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  try {
+    // 24h presigned URL — refreshed on every /auth/refresh or page reload
+    return await getSignedUrl(value, 24 * 60 * 60)
+  } catch {
+    return null
   }
 }
 
@@ -84,7 +102,7 @@ export const authService = {
     setRefreshCookie(res, refreshToken)
 
     return {
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       accessToken,
     }
   },
@@ -111,7 +129,7 @@ export const authService = {
     setRefreshCookie(res, refreshToken)
 
     return {
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       accessToken,
     }
   },
@@ -205,7 +223,7 @@ export const authService = {
     setRefreshCookie(res, refreshToken)
 
     return {
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       accessToken,
     }
   },
@@ -316,7 +334,7 @@ export const authService = {
     setRefreshCookie(res, refreshToken)
 
     return {
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       accessToken,
     }
   },
@@ -327,7 +345,7 @@ export const authService = {
     if (!user) {
       throw new AuthError('User not found', 404)
     }
-    return { user: sanitizeUser(user) }
+    return { user: await sanitizeUser(user) }
   },
 
   // ── Refresh access token ─────────────────────────────────
@@ -347,7 +365,7 @@ export const authService = {
       setRefreshCookie(res, newRefreshToken)
 
       return {
-        user: sanitizeUser(user),
+        user: await sanitizeUser(user),
         accessToken,
       }
     } catch {
