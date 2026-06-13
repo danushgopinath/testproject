@@ -202,6 +202,109 @@ export const dashboardService = {
     }
   },
 
+  async getGuideAnalytics(userId: string) {
+    const guideProfile = await prisma.guideProfile.findUnique({
+      where: { userId },
+      select: { id: true, averageRating: true },
+    })
+
+    const empty = {
+      earnings: { totalEarnings: 0, thisMonth: 0, averagePerSession: 0, sessionsThisMonth: 0 },
+      students: { totalStudents: 0, activeStudents: 0, averageRating: null as number | null, totalSessions: 0 },
+      performance: {
+        responseRate: 0,
+        averageRating: null as number | null,
+        averageResponseTimeHours: null as number | null,
+        repeatClientsPct: 0,
+      },
+    }
+
+    if (!guideProfile) return empty
+
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    // Pull every session for this guide once — derive all metrics in memory
+    const sessions = await prisma.session.findMany({
+      where: { guideId: guideProfile.id },
+      select: {
+        status: true,
+        scheduledAt: true,
+        createdAt: true,
+        updatedAt: true,
+        durationMinutes: true,
+        totalCost: true,
+        seekerId: true,
+      },
+    })
+
+    // ── Earnings (CONFIRMED + COMPLETED count as earned)
+    const earning = sessions.filter((s) => s.status === 'CONFIRMED' || s.status === 'COMPLETED')
+    const totalEarningsCents = earning.reduce((acc, s) => acc + s.totalCost, 0)
+    const thisMonth = earning.filter((s) => s.scheduledAt >= startOfMonth && s.scheduledAt < endOfMonth)
+    const thisMonthCents = thisMonth.reduce((acc, s) => acc + s.totalCost, 0)
+    const avgPerSessionCents = earning.length > 0 ? Math.round(totalEarningsCents / earning.length) : 0
+
+    // ── Students
+    const distinctSeekerIds = new Set(sessions.map((s) => s.seekerId))
+    const recentSeekerIds = new Set(
+      sessions.filter((s) => s.scheduledAt >= thirtyDaysAgo).map((s) => s.seekerId),
+    )
+    const completedCount = sessions.filter((s) => s.status === 'COMPLETED').length
+
+    // ── Performance
+    const responded = sessions.filter((s) => s.status !== 'PENDING').length
+    const responseRate = sessions.length > 0 ? Math.round((responded / sessions.length) * 100) : 0
+
+    // Response time: only count sessions where the response (updatedAt)
+    // happened BEFORE scheduledAt — that filters out auto-cancellations
+    // and CONFIRMED→COMPLETED transitions that bump updatedAt past the
+    // actual response moment.
+    const responseTimesMs: number[] = []
+    for (const s of sessions) {
+      if (s.status === 'PENDING') continue
+      if (s.updatedAt.getTime() >= s.scheduledAt.getTime()) continue
+      const diff = s.updatedAt.getTime() - s.createdAt.getTime()
+      if (diff > 0) responseTimesMs.push(diff)
+    }
+    const averageResponseTimeHours = responseTimesMs.length > 0
+      ? +(responseTimesMs.reduce((a, b) => a + b, 0) / responseTimesMs.length / 1000 / 60 / 60).toFixed(1)
+      : null
+
+    // Repeat clients: distinct seekers with >1 session / distinct seekers
+    const sessionsPerSeeker = new Map<string, number>()
+    for (const s of sessions) {
+      sessionsPerSeeker.set(s.seekerId, (sessionsPerSeeker.get(s.seekerId) ?? 0) + 1)
+    }
+    const repeatSeekerCount = Array.from(sessionsPerSeeker.values()).filter((n) => n > 1).length
+    const repeatClientsPct = distinctSeekerIds.size > 0
+      ? Math.round((repeatSeekerCount / distinctSeekerIds.size) * 100)
+      : 0
+
+    return {
+      earnings: {
+        totalEarnings: +(totalEarningsCents / 100).toFixed(2),
+        thisMonth: +(thisMonthCents / 100).toFixed(2),
+        averagePerSession: +(avgPerSessionCents / 100).toFixed(2),
+        sessionsThisMonth: thisMonth.length,
+      },
+      students: {
+        totalStudents: distinctSeekerIds.size,
+        activeStudents: recentSeekerIds.size,
+        averageRating: guideProfile.averageRating,
+        totalSessions: completedCount,
+      },
+      performance: {
+        responseRate,
+        averageRating: guideProfile.averageRating,
+        averageResponseTimeHours,
+        repeatClientsPct,
+      },
+    }
+  },
+
   async getGuidePendingRequests(userId: string) {
     const guideProfile = await prisma.guideProfile.findUnique({
       where: { userId },

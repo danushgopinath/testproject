@@ -38,7 +38,29 @@ function formatTimeSlot(time: string) {
 const emptyEducation = (): EducationInput => ({ school: '', degree: '', major: '', startYear: new Date().getFullYear(), endYear: undefined })
 const emptyExperience = (): ExperienceInput => ({ organization: '', role: '', responsibilities: '', startYear: new Date().getFullYear(), endYear: undefined, isCurrent: false })
 
-export function MentorOnboardingForm({ onComplete }: { onComplete: () => void }) {
+export interface MentorFormInitialValues {
+  phone?: string
+  currentRole?: string
+  bio?: string
+  resumeFileName?: string
+  resumeIsPublic?: boolean
+  linkedinUrl?: string
+  githubUrl?: string
+  education?: EducationInput[]
+  experience?: ExperienceInput[]
+  specializations?: string[]
+  sessionRate?: number   // in cents (as stored in DB)
+  availability?: Record<string, string[]>
+}
+
+interface MentorOnboardingFormProps {
+  onComplete: () => void
+  mode?: 'create' | 'edit'
+  initial?: MentorFormInitialValues
+  submitLabel?: string
+}
+
+export function MentorOnboardingForm({ onComplete, mode = 'create', initial, submitLabel }: MentorOnboardingFormProps) {
   const { user } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -48,27 +70,34 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
   const [firstName, setFirstName] = useState(user?.firstName ?? '')
   const [lastName, setLastName] = useState(user?.lastName ?? '')
   const [email] = useState(user?.email ?? '')
-  const [phone, setPhone] = useState('')
-  const [currentRole, setCurrentRole] = useState('')
+  const [phone, setPhone] = useState(initial?.phone ?? '')
+  const [currentRole, setCurrentRole] = useState(initial?.currentRole ?? '')
 
   // Step 2: Bio & Resume
-  const [bio, setBio] = useState('')
+  const [bio, setBio] = useState(initial?.bio ?? '')
   const [resumeFile, setResumeFile] = useState<File | null>(null)
-  const [resumeFileName, setResumeFileName] = useState('')
-  const [resumeIsPublic, setResumeIsPublic] = useState(true)
-  const [linkedinUrl, setLinkedinUrl] = useState('')
-  const [githubUrl, setGithubUrl] = useState('')
+  const [resumeFileName, setResumeFileName] = useState(initial?.resumeFileName ?? '')
+  const [resumeIsPublic, setResumeIsPublic] = useState(initial?.resumeIsPublic ?? true)
+  const [linkedinUrl, setLinkedinUrl] = useState(initial?.linkedinUrl ?? '')
+  const [githubUrl, setGithubUrl] = useState(initial?.githubUrl ?? '')
 
   // Step 3: Education
-  const [education, setEducation] = useState<EducationInput[]>([emptyEducation()])
+  const [education, setEducation] = useState<EducationInput[]>(
+    initial?.education && initial.education.length > 0 ? initial.education : [emptyEducation()],
+  )
 
   // Step 4: Experience
-  const [experience, setExperience] = useState<ExperienceInput[]>([emptyExperience()])
+  const [experience, setExperience] = useState<ExperienceInput[]>(
+    initial?.experience && initial.experience.length > 0 ? initial.experience : [emptyExperience()],
+  )
 
   // Step 5: Expertise & Availability
-  const [specializations, setSpecializations] = useState<string[]>([])
-  const [sessionRate, setSessionRate] = useState('')
-  const [availability, setAvailability] = useState<Record<string, string[]>>({})
+  const [specializations, setSpecializations] = useState<string[]>(initial?.specializations ?? [])
+  // sessionRate from backend is stored in cents — convert back to dollars for the UI
+  const [sessionRate, setSessionRate] = useState(
+    initial?.sessionRate != null ? String(Math.round(initial.sessionRate / 100)) : '',
+  )
+  const [availability, setAvailability] = useState<Record<string, string[]>>(initial?.availability ?? {})
 
   // ── Education helpers ──
   const updateEdu = (i: number, patch: Partial<EducationInput>) =>
@@ -169,8 +198,14 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
     <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-text-primary">Become a Mentor</h1>
-        <p className="mt-1 text-sm text-text-muted">Share your journey and help others succeed</p>
+        <h1 className="text-2xl font-bold text-text-primary">
+          {mode === 'edit' ? 'Edit Mentor Profile' : 'Become a Mentor'}
+        </h1>
+        <p className="mt-1 text-sm text-text-muted">
+          {mode === 'edit'
+            ? 'Update your mentor profile. Changes are visible to seekers immediately.'
+            : 'Share your journey and help others succeed'}
+        </p>
       </div>
 
       {/* Step circles */}
@@ -311,8 +346,15 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
                 ) : (
                   <label className="cursor-pointer">
                     <Upload className="mx-auto mb-2 h-8 w-8 text-text-muted" />
-                    <span className="text-sm font-medium text-primary hover:underline">Click to upload</span>
+                    <span className="text-sm font-medium text-primary hover:underline">
+                      {mode === 'edit' && resumeFileName ? 'Replace resume' : 'Click to upload'}
+                    </span>
                     <p className="mt-1 text-xs text-text-muted">PDF, DOC, or DOCX (max 10 MB)</p>
+                    {mode === 'edit' && resumeFileName && (
+                      <p className="mt-1 text-xs font-medium text-text-primary">
+                        Current: {resumeFileName}
+                      </p>
+                    )}
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
@@ -325,7 +367,7 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
                   </label>
                 )}
               </div>
-              {resumeFile && (
+              {(resumeFile || (mode === 'edit' && resumeFileName)) && (
                 <label className="mt-2 flex items-center gap-2 text-sm text-text-muted cursor-pointer">
                   <input
                     type="checkbox"
@@ -684,7 +726,7 @@ export function MentorOnboardingForm({ onComplete }: { onComplete: () => void })
                 isStepValid() && !isSubmitting ? 'bg-primary hover:bg-primary/90' : 'cursor-not-allowed bg-gray-300'
               }`}
             >
-              {isSubmitting ? 'Saving...' : 'Submit'} {!isSubmitting && <Check className="h-4 w-4" />}
+              {isSubmitting ? 'Saving...' : (submitLabel ?? (mode === 'edit' ? 'Save Changes' : 'Submit'))} {!isSubmitting && <Check className="h-4 w-4" />}
             </button>
           )}
         </div>

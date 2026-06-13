@@ -3,6 +3,8 @@ import { apiClient } from '../services/apiClient'
 
 export interface GuideListItem {
   id: string
+  userId: string
+  avatarUrl: string | null
   name: string
   headline: string
   currentRole: string

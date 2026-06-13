@@ -55,3 +55,10 @@ export async function getGuidePendingRequests(req: AuthenticatedRequest, res: Re
   res.json(result)
 }
 
+export async function getGuideAnalytics(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Missing user context', 401)
+  const result = await dashboardService.getGuideAnalytics(userId)
+  res.json(result)
+}
+

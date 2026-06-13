@@ -4,6 +4,16 @@ import { getSignedUrl } from '../utils/s3'
 
 const DEFAULT_PAGE_SIZE = 20
 
+async function resolveAvatar(value: string | null | undefined): Promise<string | null> {
+  if (!value) return null
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  try {
+    return await getSignedUrl(value, 24 * 60 * 60)
+  } catch {
+    return null
+  }
+}
+
 export const guideService = {
   async listPublicGuides(query: {
     cursor?: string
@@ -36,8 +46,10 @@ export const guideService = {
 
     const { items, nextCursor } = await guideRepository.findManyPublic(filters)
 
-    const guides = items.map((g) => ({
+    const guides = await Promise.all(items.map(async (g) => ({
       id: g.id,
+      userId: g.user.id,
+      avatarUrl: await resolveAvatar(g.user.avatarUrl),
       name: `${g.user.firstName} ${g.user.lastName}`,
       headline: g.headline,
       currentRole: g.currentRole,
@@ -56,7 +68,7 @@ export const guideService = {
         institution: j.institution,
         year: j.year,
       })),
-    }))
+    })))
 
     return {
       guides,
@@ -77,8 +89,11 @@ export const guideService = {
 
     return {
       id: guide.id,
+      userId: guide.user.id,
+      avatarUrl: await resolveAvatar(guide.user.avatarUrl),
       name: `${guide.user.firstName} ${guide.user.lastName}`,
       bio: guide.user.bio ?? null,
+      availability: (guide.availability as Record<string, string[]> | null) ?? null,
       headline: guide.headline,
       currentRole: guide.currentRole,
       currentCompany: guide.currentCompany,

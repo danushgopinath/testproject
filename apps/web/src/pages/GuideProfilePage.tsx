@@ -61,8 +61,12 @@ export function GuideProfilePage() {
           <div className="flex flex-col sm:flex-row items-start gap-5">
 
             {/* Avatar */}
-            <div className="flex-shrink-0 h-20 w-20 flex items-center justify-center rounded-full bg-[#070738] text-2xl font-bold text-[#F5B400]">
-              {initials}
+            <div className="flex-shrink-0 h-20 w-20 overflow-hidden flex items-center justify-center rounded-full bg-[#070738] text-2xl font-bold text-[#F5B400]">
+              {guide.avatarUrl ? (
+                <img src={guide.avatarUrl} alt={guide.name} className="h-20 w-20 object-cover" />
+              ) : (
+                initials
+              )}
             </div>
 
             {/* Info */}

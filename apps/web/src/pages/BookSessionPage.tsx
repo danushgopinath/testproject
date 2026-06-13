@@ -226,6 +226,51 @@ export function BookSessionPage() {
     )
   }
 
+  // ── Block self-booking ───────────────────────────────────────────
+  // A user cannot book a session with themselves. We still render the
+  // page (so they can read the profile) but replace the booking flow
+  // with a clear message and a link back to Find Mentors.
+  const isOwnProfile = !!user?.id && !!(guide as any).userId && user.id === (guide as any).userId
+  if (isOwnProfile) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto max-w-3xl px-4 py-10 md:px-6">
+          <button
+            onClick={() => navigate(`/guides/${guide.id}`)}
+            className="mb-6 flex items-center gap-2 text-sm text-[#070738]/55 hover:text-[#070738] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Profile
+          </button>
+          <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+              <Lock className="h-7 w-7 text-amber-700" />
+            </div>
+            <h2 className="text-xl font-bold text-[#070738]">You can't book your own session</h2>
+            <p className="mt-2 text-sm text-[#070738]/60">
+              This is your own mentor profile. Use Find Mentors to book a session with a different mentor,
+              or edit your profile from the settings.
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={() => navigate('/guides')}
+                style={{ color: 'white' }}
+                className="rounded-xl bg-[#070738] px-5 py-2.5 text-sm font-semibold hover:bg-[#070738]/90 transition-colors"
+              >
+                Find Mentors
+              </button>
+              <button
+                onClick={() => navigate('/settings/mentor')}
+                className="rounded-xl border border-[#070738]/15 px-5 py-2.5 text-sm font-semibold text-[#070738] hover:bg-[#f5f7fc] transition-colors"
+              >
+                Edit My Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const initials = guide.name.split(' ').map((p: string) => p[0]).join('').slice(0, 2)
   const price = guide.sessionRate ? `$${(guide.sessionRate / 100).toFixed(0)}/hr` : 'Free'
 
@@ -265,8 +310,12 @@ export function BookSessionPage() {
     <div className="rounded-2xl border border-[#070738]/8 bg-[#f5f7fc] p-5">
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#070738]/50">Session with</h3>
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#070738] text-sm font-bold text-[#F5B400]">
-          {initials}
+        <div className="flex h-12 w-12 flex-shrink-0 overflow-hidden items-center justify-center rounded-full bg-[#070738] text-sm font-bold text-[#F5B400]">
+          {guide.avatarUrl ? (
+            <img src={guide.avatarUrl} alt={guide.name} className="h-12 w-12 object-cover" />
+          ) : (
+            initials
+          )}
         </div>
         <div>
           <p className="text-sm font-semibold text-[#070738]">{guide.name}</p>

@@ -54,7 +54,10 @@ export const sessionService = {
     })
     if (!guide) throw new AppError('Guide not found', 404)
 
-    // Note: self-booking (user is both seeker and guide) is permitted.
+    // Block self-booking — a user cannot book a session with themselves
+    if (guide.userId === userId) {
+      throw new AppError('You cannot book a session with yourself.', 400)
+    }
 
     // ── Prevent double-booking the exact same slot with same mentor
     const overlap = await prisma.session.findFirst({

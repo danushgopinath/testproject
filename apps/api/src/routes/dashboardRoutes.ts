@@ -12,6 +12,7 @@ router.get('/seeker/sessions', requireAuth, catchAsync(dashboardController.getSe
 router.get('/seeker/analytics', requireAuth, catchAsync(dashboardController.getSeekerAnalytics))
 router.get('/guide', requireAuth, catchAsync(dashboardController.getGuideDashboard))
 router.get('/guide/pending-requests', requireAuth, catchAsync(dashboardController.getGuidePendingRequests))
+router.get('/guide/analytics', requireAuth, catchAsync(dashboardController.getGuideAnalytics))
 
 export { router as dashboardRoutes }
 

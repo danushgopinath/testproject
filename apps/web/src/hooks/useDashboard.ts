@@ -74,6 +74,38 @@ export function useGuidePendingRequests(enabled = true) {
   })
 }
 
+export interface GuideAnalyticsResponse {
+  earnings: {
+    totalEarnings: number
+    thisMonth: number
+    averagePerSession: number
+    sessionsThisMonth: number
+  }
+  students: {
+    totalStudents: number
+    activeStudents: number
+    averageRating: number | null
+    totalSessions: number
+  }
+  performance: {
+    responseRate: number
+    averageRating: number | null
+    averageResponseTimeHours: number | null
+    repeatClientsPct: number
+  }
+}
+
+export function useGuideAnalytics(enabled = true) {
+  return useQuery({
+    enabled,
+    queryKey: ['dashboard', 'guide', 'analytics'],
+    queryFn: async () => {
+      const res = await apiClient.get<GuideAnalyticsResponse>('/dashboard/guide/analytics')
+      return res.data
+    },
+  })
+}
+
 export interface SeekerDashboardResponse {
   stats: {
     upcomingSessions: number

@@ -2,14 +2,22 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, MapPin, GraduationCap, Building,
-  Star, Globe, Clock, Calendar, ChevronDown, X,
+  Star, Globe, Clock, Calendar, ChevronDown, X, Pencil,
 } from 'lucide-react'
 import { useGuides } from '../hooks/useGuides'
+import { useAuthStore } from '../stores/authStore'
+import { useMyProfile } from '../hooks/useDashboard'
 
 type FilterKey = 'university' | 'specialization' | 'language' | 'country' | 'degree'
+type SortKey = 'highest_rated' | 'most_reviews' | 'price_high' | 'price_low' | 'my_profile'
 
 // ── Guide card ────────────────────────────────────────────────────────────────
-function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
+function GuideCard({ guide, onBook, isOwn, onEdit }: {
+  guide: any
+  onBook: () => void
+  isOwn?: boolean
+  onEdit?: () => void
+}) {
   const initials = guide.name.split(' ').map((p: string) => p[0]).join('').slice(0, 2)
   const price = guide.sessionRate ? `$${(guide.sessionRate / 100).toFixed(0)}/hr` : 'Free'
   const rating = guide.averageRating ? guide.averageRating.toFixed(1) : null
@@ -17,11 +25,24 @@ function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
   const langLabel = langs.length > 1 ? `${langs[0]} +${langs.length - 1}` : langs[0]
 
   return (
-    <article className="bg-[#f5f7fc] rounded-2xl border border-[#070738]/8 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200">
+    <article className="relative bg-[#f5f7fc] rounded-2xl border border-[#070738]/8 p-6 flex flex-col hover:shadow-lg transition-shadow duration-200">
+      {isOwn && onEdit && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit() }}
+          title="Edit your profile"
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white border border-[#070738]/15 text-[#070738]/60 hover:text-[#070738] hover:border-[#070738]/40 shadow-sm transition-colors"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      )}
       {/* Avatar + name */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="flex-shrink-0 h-14 w-14 flex items-center justify-center rounded-full bg-[#070738] text-base font-bold text-[#F5B400]">
-          {initials}
+        <div className="flex-shrink-0 h-14 w-14 overflow-hidden flex items-center justify-center rounded-full bg-[#070738] text-base font-bold text-[#F5B400]">
+          {guide.avatarUrl ? (
+            <img src={guide.avatarUrl} alt={guide.name} className="h-14 w-14 object-cover" />
+          ) : (
+            initials
+          )}
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <h2 className="text-[15px] font-bold text-[#070738] leading-tight">{guide.name}</h2>
@@ -89,9 +110,12 @@ function GuideCard({ guide, onBook }: { guide: any; onBook: () => void }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export function GuidesPage() {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  const { data: myProfile } = useMyProfile()
+  const isMentor = Boolean(myProfile?.guide)
   const [searchQuery, setSearchQuery] = useState('')
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null)
-  const [sortBy, setSortBy] = useState<'highest_rated' | 'most_reviews' | 'price_high' | 'price_low'>('highest_rated')
+  const [sortBy, setSortBy] = useState<SortKey>('highest_rated')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({
@@ -114,6 +138,9 @@ export function GuidesPage() {
   const rawGuides = data?.guides ?? []
 
   const guides = useMemo(() => {
+    if (sortBy === 'my_profile' && user) {
+      return rawGuides.filter((g) => g.userId === user.id)
+    }
     const sorted = [...rawGuides]
     switch (sortBy) {
       case 'highest_rated':
@@ -127,7 +154,7 @@ export function GuidesPage() {
       default:
         return sorted
     }
-  }, [rawGuides, sortBy])
+  }, [rawGuides, sortBy, user])
 
   const allUniversities = useMemo(
     () => Array.from(new Set(guides.map((g) => g.university).filter(Boolean))) as string[],
@@ -361,16 +388,18 @@ export function GuidesPage() {
                   {sortBy === 'most_reviews' && 'Most Reviews'}
                   {sortBy === 'price_high' && 'Price: High to Low'}
                   {sortBy === 'price_low' && 'Price: Low to High'}
+                  {sortBy === 'my_profile' && 'My Profile'}
                   <ChevronDown className={`h-3.5 w-3.5 text-[#070738]/50 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {sortOpen && (
                   <div className="absolute right-0 top-full mt-1.5 z-30 w-48 rounded-xl border border-[#070738]/10 bg-white shadow-lg overflow-hidden">
-                    {([
+                    {(([
                       { value: 'highest_rated', label: 'Highest Rated' },
                       { value: 'most_reviews', label: 'Most Reviews' },
                       { value: 'price_high', label: 'Price: High to Low' },
                       { value: 'price_low', label: 'Price: Low to High' },
-                    ] as const).map((opt) => (
+                      ...(isMentor ? [{ value: 'my_profile', label: 'My Profile' } as const] : []),
+                    ]) as readonly { value: SortKey; label: string }[]).map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => { setSortBy(opt.value); setSortOpen(false) }}
@@ -409,13 +438,18 @@ export function GuidesPage() {
           )}
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {guides.map((guide) => (
-              <GuideCard
-                key={guide.id}
-                guide={guide}
-                onBook={() => navigate(`/guides/${guide.id}`)}
-              />
-            ))}
+            {guides.map((guide) => {
+              const isOwn = !!user && guide.userId === user.id
+              return (
+                <GuideCard
+                  key={guide.id}
+                  guide={guide}
+                  isOwn={isOwn}
+                  onBook={() => navigate(`/guides/${guide.id}`)}
+                  onEdit={isOwn ? () => navigate('/settings/mentor') : undefined}
+                />
+              )
+            })}
           </div>
         </div>
       </div>

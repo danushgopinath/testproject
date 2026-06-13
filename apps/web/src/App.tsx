@@ -17,6 +17,7 @@ import { PrivacySettingsPage } from './pages/settings/PrivacySettingsPage'
 import { BillingSettingsPage } from './pages/settings/BillingSettingsPage'
 import { LanguageSettingsPage } from './pages/settings/LanguageSettingsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { EditMentorProfilePage } from './pages/settings/EditMentorProfilePage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage'
 import { TermsOfServicePage } from './pages/legal/TermsOfServicePage'
@@ -132,6 +133,7 @@ export function App() {
         <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
         <Route path="/settings/billing" element={<ProtectedRoute><BillingSettingsPage /></ProtectedRoute>} />
         <Route path="/settings/language" element={<ProtectedRoute><LanguageSettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/mentor" element={<ProtectedRoute><EditMentorProfilePage /></ProtectedRoute>} />
       </Routes>
     </Layout>
   )
