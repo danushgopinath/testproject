@@ -10,6 +10,8 @@ export interface GuideListItem {
   currentRole: string
   bio: string | null
   university: string | null
+  currentCompany: string | null
+  degrees: string[]
   languages: string[]
   specializations: string[]
   totalSessions: number
@@ -32,18 +34,17 @@ export interface GuidesResponse {
 
 export function useGuides(params?: {
   search?: string
-  university?: string
-  specialization?: string
-  language?: string
   limit?: number
 }) {
-  const { search, university, specialization, language, limit } = params ?? {}
+  // University / expertise / company / degree filtering is applied client-side
+  // in GuidesPage so options always reflect the loaded mentor set.
+  const { search, limit } = params ?? {}
 
   return useQuery({
-    queryKey: ['guides', { search, university, specialization, language, limit }],
+    queryKey: ['guides', { search, limit }],
     queryFn: async () => {
       const res = await apiClient.get<GuidesResponse>('/guides', {
-        params: { search, university, specialization, language, limit },
+        params: { search, limit },
       })
       return res.data
     },

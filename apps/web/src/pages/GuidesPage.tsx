@@ -1,14 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, MapPin, GraduationCap, Building,
+  Search, GraduationCap, Building, Briefcase, Award,
   Star, Globe, Clock, Calendar, ChevronDown, X, Pencil,
 } from 'lucide-react'
 import { useGuides } from '../hooks/useGuides'
 import { useAuthStore } from '../stores/authStore'
 import { useMyProfile } from '../hooks/useDashboard'
 
-type FilterKey = 'university' | 'specialization' | 'language' | 'country' | 'degree'
+type FilterKey = 'university' | 'specialization' | 'company' | 'degree'
 type SortKey = 'highest_rated' | 'most_reviews' | 'price_high' | 'price_low' | 'my_profile'
 
 // ── Guide card ────────────────────────────────────────────────────────────────
@@ -121,27 +121,47 @@ export function GuidesPage() {
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string[]>>({
     university: [],
     specialization: [],
-    language: [],
-    country: [],
+    company: [],
     degree: [],
   })
   const filterRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading } = useGuides({
     search: searchQuery || undefined,
-    university: activeFilters.university[0],
-    specialization: activeFilters.specialization[0],
-    language: activeFilters.language[0],
     limit: 50,
   })
 
   const rawGuides = data?.guides ?? []
 
+  // Faceted filtering applied client-side: a mentor must match at least one
+  // selected value within each active facet (OR within a facet, AND across).
+  const filteredGuides = useMemo(() => {
+    return rawGuides.filter((g) => {
+      if (
+        activeFilters.university.length > 0 &&
+        !(g.university && activeFilters.university.includes(g.university))
+      ) return false
+      if (
+        activeFilters.specialization.length > 0 &&
+        !activeFilters.specialization.some((s) => (g.specializations ?? []).includes(s))
+      ) return false
+      if (
+        activeFilters.company.length > 0 &&
+        !(g.currentCompany && activeFilters.company.includes(g.currentCompany))
+      ) return false
+      if (
+        activeFilters.degree.length > 0 &&
+        !activeFilters.degree.some((d) => (g.degrees ?? []).includes(d))
+      ) return false
+      return true
+    })
+  }, [rawGuides, activeFilters])
+
   const guides = useMemo(() => {
     if (sortBy === 'my_profile' && user) {
-      return rawGuides.filter((g) => g.userId === user.id)
+      return filteredGuides.filter((g) => g.userId === user.id)
     }
-    const sorted = [...rawGuides]
+    const sorted = [...filteredGuides]
     switch (sortBy) {
       case 'highest_rated':
         return sorted.sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0))
@@ -154,35 +174,32 @@ export function GuidesPage() {
       default:
         return sorted
     }
-  }, [rawGuides, sortBy, user])
+  }, [filteredGuides, sortBy, user])
 
+  // Filter options are derived from the full loaded mentor set so they always
+  // reflect real profiles (e.g. if only one college exists, only it shows).
   const allUniversities = useMemo(
-    () => Array.from(new Set(guides.map((g) => g.university).filter(Boolean))) as string[],
-    [guides],
+    () => Array.from(new Set(rawGuides.map((g) => g.university).filter(Boolean))) as string[],
+    [rawGuides],
   )
   const allSpecializations = useMemo(
-    () => Array.from(new Set(guides.flatMap((g) => g.specializations ?? []))),
-    [guides],
+    () => Array.from(new Set(rawGuides.flatMap((g) => g.specializations ?? []))),
+    [rawGuides],
   )
-  const allLanguages = useMemo(
-    () => Array.from(new Set(guides.flatMap((g) => g.languages))),
-    [guides],
-  )
-  const allCountries = useMemo(
-    () => Array.from(new Set(guides.map((g: any) => g.country).filter(Boolean))) as string[],
-    [guides],
+  const allCompanies = useMemo(
+    () => Array.from(new Set(rawGuides.map((g) => g.currentCompany).filter(Boolean))) as string[],
+    [rawGuides],
   )
   const allDegrees = useMemo(
-    () => Array.from(new Set(guides.flatMap((g: any) => g.degrees ?? []).filter(Boolean))) as string[],
-    [guides],
+    () => Array.from(new Set(rawGuides.flatMap((g) => g.degrees ?? []).filter(Boolean))) as string[],
+    [rawGuides],
   )
 
-  const filterConfig: { key: FilterKey; label: string; icon: typeof MapPin; options: string[] }[] = [
+  const filterConfig: { key: FilterKey; label: string; icon: typeof Building; options: string[] }[] = [
     { key: 'university', label: 'University', icon: Building, options: allUniversities },
     { key: 'specialization', label: 'Expertise', icon: GraduationCap, options: allSpecializations },
-    { key: 'language', label: 'Languages', icon: Globe, options: allLanguages },
-    { key: 'country', label: 'Country', icon: MapPin, options: allCountries },
-    { key: 'degree', label: 'Degree', icon: GraduationCap, options: allDegrees },
+    { key: 'company', label: 'Company', icon: Briefcase, options: allCompanies },
+    { key: 'degree', label: 'Degree', icon: Award, options: allDegrees },
   ]
 
   useEffect(() => {
@@ -209,7 +226,7 @@ export function GuidesPage() {
   }
 
   const clearAllFilters = () => {
-    setActiveFilters({ university: [], specialization: [], language: [], country: [], degree: [] })
+    setActiveFilters({ university: [], specialization: [], company: [], degree: [] })
     setSearchQuery('')
   }
 

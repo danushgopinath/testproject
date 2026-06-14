@@ -4,6 +4,24 @@ import { getSignedUrl } from '../utils/s3'
 
 const DEFAULT_PAGE_SIZE = 20
 
+// ── Derived filter fields ──────────────────────────────────────────────
+// Education/experience arrive ordered by startYear desc (most recent first).
+type EducationLike = { school: string; degree: string; endYear: number | null; startYear: number }
+type ExperienceLike = { organization: string; isCurrent: boolean }
+
+function deriveUniversity(education: EducationLike[]): string | null {
+  return education[0]?.school ?? null
+}
+
+function deriveDegrees(education: EducationLike[]): string[] {
+  return Array.from(new Set(education.map((e) => e.degree).filter(Boolean)))
+}
+
+function deriveCompany(experience: ExperienceLike[]): string | null {
+  const current = experience.find((e) => e.isCurrent)
+  return current?.organization ?? experience[0]?.organization ?? null
+}
+
 async function resolveAvatar(value: string | null | undefined): Promise<string | null> {
   if (!value) return null
   if (value.startsWith('http://') || value.startsWith('https://')) return value
@@ -54,7 +72,11 @@ export const guideService = {
       headline: g.headline,
       currentRole: g.currentRole,
       bio: g.user.bio ?? null,
-      university: g.university,
+      // University/company/degrees are derived from the mentor's own
+      // education & experience so filter options always reflect real data.
+      university: deriveUniversity(g.education) ?? g.university,
+      currentCompany: deriveCompany(g.experience) ?? g.currentCompany,
+      degrees: deriveDegrees(g.education),
       languages: g.languages,
       specializations: g.specializations,
       totalSessions: g.totalSessions,

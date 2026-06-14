@@ -15,7 +15,6 @@ import { apiClient } from '../services/apiClient'
 const DURATIONS = [
   { label: '30 minutes', minutes: 30, multiplier: 0.5 },
   { label: '1 hour', minutes: 60, multiplier: 1 },
-  { label: '2 hours', minutes: 120, multiplier: 2 },
 ]
 const SESSION_TYPES = [
   'General Mentoring', 'Career Guidance', 'Application Review',
