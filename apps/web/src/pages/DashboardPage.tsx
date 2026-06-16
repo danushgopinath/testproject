@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, GraduationCap, X } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useGuideDashboard, useMyProfile, useSeekerDashboard } from '../hooks/useDashboard'
@@ -14,6 +14,7 @@ type DashboardRole = 'SEEKER' | 'GUIDE'
 export function DashboardPage() {
   const { user, dashboardRole, setDashboardRole } = useAuthStore()
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -502,6 +503,7 @@ export function DashboardPage() {
                           <MessageSquare className="h-3.5 w-3.5" /> Message
                         </Link>
                         <button
+                          onClick={() => { if (session.action === 'Join') navigate(`/sessions/${session.id}/call`) }}
                           className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                             session.action === 'Join'
                               ? 'bg-primary text-white hover:bg-primary/90'
@@ -569,6 +571,7 @@ export function DashboardPage() {
                             <MessageSquare className="h-3.5 w-3.5" /> Message
                           </Link>
                           <button
+                            onClick={() => { if (session.action === 'Join') navigate(`/sessions/${session.id}/call`) }}
                             className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                               session.action === 'Join' || session.action === 'Accept'
                                 ? 'bg-primary text-white hover:bg-primary/90'

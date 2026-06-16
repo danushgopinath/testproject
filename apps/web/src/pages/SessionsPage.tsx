@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Calendar, Clock, Video, Search, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useSeekerSessions, type SeekerSessionItem } from '../hooks/useDashboard'
 
@@ -15,6 +15,7 @@ function statusBadge(status: SeekerSessionItem['status']) {
 
 export function SessionsPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const params = new URLSearchParams(location.search)
   const initialTab = (params.get('tab') as Tab) || 'upcoming'
 
@@ -134,7 +135,11 @@ export function SessionsPage() {
                           <button className="rounded-lg border border-border bg-surface px-4 py-2 text-xs font-medium text-text-primary transition-colors hover:bg-background">
                             Reschedule
                           </button>
-                          <button className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90">
+                          <button
+                            onClick={() => navigate(`/sessions/${session.id}/call`)}
+                            disabled={session.status !== 'CONFIRMED'}
+                            className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
                             Join Session
                           </button>
                         </>
