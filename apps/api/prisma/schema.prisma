@@ -161,6 +161,18 @@ model Session {
   guide           GuideProfile  @relation("GuideSessions", fields: [guideId], references: [id])
   review          Review?
   messages        Message[]
+  call            SessionCall?
+}
+
+model SessionCall {
+  id            String   @id @default(uuid())
+  sessionId     String   @unique
+  dailyRoomName String
+  dailyRoomUrl  String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model Review {
