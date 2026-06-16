@@ -35,6 +35,11 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_REGION: z.string().default('us-east-1'),
   AWS_S3_BUCKET: z.string().optional(),
+  // Daily.co video — optional so the app boots without them; dailyService
+  // throws a clear error at call time if they're missing.
+  DAILY_API_KEY: z.string().optional(),
+  DAILY_API_URL: z.string().url().default('https://api.daily.co/v1'),
+  DAILY_DOMAIN: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
