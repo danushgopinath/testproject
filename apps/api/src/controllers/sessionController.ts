@@ -42,4 +42,12 @@ export const sessionController = {
     const result = await sessionService.declineSession(req.auth.userId, sessionId)
     res.json(result)
   }),
+
+  join: catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.auth?.userId) throw new AppError('Unauthenticated', 401)
+    const sessionId = req.params['id'] as string
+    if (!sessionId) throw new AppError('Missing session id', 400)
+    const result = await sessionService.joinSession(req.auth.userId, sessionId)
+    res.json(result)
+  }),
 }

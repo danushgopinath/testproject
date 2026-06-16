@@ -7,6 +7,8 @@ import {
   sendBookingPlacedEmail,
 } from '../utils/email'
 import { notificationService } from './notificationService'
+import { dailyService } from './dailyService'
+import { evaluateJoinEligibility } from './video/joinEligibility'
 
 function fmtDate(d: Date) {
   return d.toLocaleString('en-US', {
@@ -248,5 +250,84 @@ export const sessionService = {
     }).catch(() => {})
 
     return { sessionId, status: 'CANCELLED' }
+  },
+
+  /**
+   * Authorize + window-check a join, lazily create the Daily room, and mint a
+   * per-user meeting token. Timing outcomes are returned in-band (200); only
+   * hard authorization/status failures throw.
+   */
+  async joinSession(userId: string, sessionId: string): Promise<
+    | { status: 'ok'; roomUrl: string; token: string; expiresAt: string; role: 'guide' | 'seeker' }
+    | { status: 'too_early'; opensAt: string }
+    | { status: 'expired' }
+  > {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        seeker: { include: { user: true } },
+        guide: { include: { user: true } },
+        call: true,
+      },
+    })
+    if (!session) throw new AppError('Session not found', 404)
+
+    const seekerUserId = session.seeker.user.id
+    const guideUserId = session.guide.user.id
+
+    const result = evaluateJoinEligibility({
+      session: {
+        status: session.status,
+        scheduledAt: session.scheduledAt,
+        durationMinutes: session.durationMinutes,
+        seekerUserId,
+        guideUserId,
+      },
+      userId,
+      now: new Date(),
+    })
+
+    if (!result.ok) {
+      if (result.reason === 'not_participant') throw new AppError('You are not a participant in this session', 403)
+      if (result.reason === 'not_confirmed') throw new AppError('This session is not confirmed', 409)
+      if (result.reason === 'too_early') return { status: 'too_early', opensAt: result.opensAt!.toISOString() }
+      return { status: 'expired' }
+    }
+
+    // Lazily create (or reuse) the room.
+    const roomName = `session-${session.id}`
+    let roomUrl = session.call?.dailyRoomUrl
+    if (!session.call) {
+      const room = await dailyService.createRoom({ name: roomName, expiresAt: result.window.closesAt })
+      roomUrl = room.url
+      await prisma.sessionCall.create({
+        data: {
+          sessionId: session.id,
+          dailyRoomName: room.name,
+          dailyRoomUrl: room.url,
+          expiresAt: result.window.closesAt,
+        },
+      })
+    }
+
+    const isOwner = result.role === 'guide'
+    const u = isOwner ? session.guide.user : session.seeker.user
+    const userName = `${u.firstName} ${u.lastName}`.trim() || 'Participant'
+
+    const token = await dailyService.createMeetingToken({
+      roomName,
+      userId,
+      userName,
+      isOwner,
+      expiresAt: result.window.closesAt,
+    })
+
+    return {
+      status: 'ok',
+      roomUrl: roomUrl as string,
+      token,
+      expiresAt: result.window.closesAt.toISOString(),
+      role: result.role,
+    }
   },
 }
