@@ -1,4 +1,6 @@
-const OPEN_LEAD_MS = 10 * 60 * 1000 // join opens 10 min before start
+// TEMPORARY (testing): join opens 2 days before start so sessions are easy to
+// join without waiting. REVERT to `10 * 60 * 1000` (10 min) before production.
+const OPEN_LEAD_MS = 2 * 24 * 60 * 60 * 1000
 const GRACE_MS = 15 * 60 * 1000 // window stays open 15 min past the end
 
 export interface JoinWindow {

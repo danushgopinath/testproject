@@ -4,9 +4,9 @@ import { getJoinWindow, evaluateWindow } from './joinWindow'
 const scheduled = new Date('2026-07-01T15:00:00.000Z')
 
 describe('getJoinWindow', () => {
-  it('opens 10 minutes before the scheduled start', () => {
+  it('opens 2 days before the scheduled start (temporary testing window)', () => {
     const { opensAt } = getJoinWindow(scheduled, 60)
-    expect(opensAt.toISOString()).toBe('2026-07-01T14:50:00.000Z')
+    expect(opensAt.toISOString()).toBe('2026-06-29T15:00:00.000Z')
   })
 
   it('closes duration + 15 minutes grace after the start', () => {
@@ -19,7 +19,7 @@ describe('evaluateWindow', () => {
   const window = getJoinWindow(scheduled, 60)
 
   it('returns too_early before the window opens', () => {
-    expect(evaluateWindow(window, new Date('2026-07-01T14:49:59.000Z'))).toBe('too_early')
+    expect(evaluateWindow(window, new Date('2026-06-29T14:59:59.000Z'))).toBe('too_early')
   })
 
   it('returns open inside the window', () => {

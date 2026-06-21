@@ -29,9 +29,9 @@ describe('evaluateJoinEligibility', () => {
     const r = evaluateJoinEligibility({
       session: base,
       userId: 'seeker-1',
-      now: new Date('2026-07-01T14:00:00.000Z'),
+      now: new Date('2026-06-29T14:00:00.000Z'),
     })
-    expect(r).toEqual({ ok: false, reason: 'too_early', opensAt: new Date('2026-07-01T14:50:00.000Z') })
+    expect(r).toEqual({ ok: false, reason: 'too_early', opensAt: new Date('2026-06-29T15:00:00.000Z') })
   })
 
   it('reports expired after the window', () => {
