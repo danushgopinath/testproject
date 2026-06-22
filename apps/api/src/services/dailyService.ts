@@ -41,10 +41,16 @@ export const dailyService = {
       }),
     })
 
-    if (res.ok || res.status === 409) {
+    if (res.ok) {
       return { name, url }
     }
     const detail = await res.text()
+    // The room name is deterministic per session. If it already exists (Daily
+    // returns 409, or 400 with an "already exists" message), reuse it instead
+    // of failing — the room outlives our SessionCall row.
+    if (res.status === 409 || detail.includes('already exists')) {
+      return { name, url }
+    }
     throw new AppError(`Daily createRoom failed (${res.status}): ${detail}`, 502)
   },
 
