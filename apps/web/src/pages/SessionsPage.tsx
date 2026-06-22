@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Calendar, Clock, Video, Search, ArrowLeft, CheckCircle, XCircle, MessageSquare } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useAuthStore } from '../stores/authStore'
+import { useOpenSessionCall } from '../hooks/useSessions'
 import {
   useSeekerSessions,
   useGuideSessions,
@@ -22,7 +23,7 @@ function statusBadge(status: SessionStatus) {
 
 export function SessionsPage() {
   const location = useLocation()
-  const navigate = useNavigate()
+  const openCall = useOpenSessionCall()
   const { dashboardRole, user } = useAuthStore()
   const activeRole = (dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')
   const isGuide = activeRole === 'GUIDE'
@@ -152,7 +153,7 @@ export function SessionsPage() {
                         <>
                           {session.status === 'CONFIRMED' && (
                             <button
-                              onClick={() => navigate(`/sessions/${session.id}/call`)}
+                              onClick={() => openCall(session.id)}
                               className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90"
                             >
                               Join Session

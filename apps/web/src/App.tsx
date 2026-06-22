@@ -10,7 +10,6 @@ import { LinkedInCallbackPage } from './pages/auth/LinkedInCallbackPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { MessagesPage } from './pages/MessagesPage'
 import { SessionsPage } from './pages/SessionsPage'
-import { SessionCallPage } from './pages/SessionCallPage'
 import { ReviewsPage } from './pages/ReviewsPage'
 import { ProfileSettingsPage } from './pages/settings/ProfileSettingsPage'
 import { PasswordSettingsPage } from './pages/settings/PasswordSettingsPage'
@@ -128,7 +127,6 @@ export function App() {
         <Route path="/dashboard/analytics/performance" element={<ProtectedRoute><PerformanceAnalyticsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/sessions" element={<ProtectedRoute><SessionsPage /></ProtectedRoute>} />
-        <Route path="/sessions/:id/call" element={<ProtectedRoute><SessionCallPage /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/settings/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} />

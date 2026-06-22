@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, X } from 'lucide-react'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useGuideDashboard, useMyProfile, useSeekerDashboard } from '../hooks/useDashboard'
-import { useAcceptSession, useDeclineSession } from '../hooks/useSessions'
+import { useAcceptSession, useDeclineSession, useOpenSessionCall } from '../hooks/useSessions'
 import { onboardingApi } from '../services/onboardingService'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -14,7 +14,7 @@ type DashboardRole = 'SEEKER' | 'GUIDE'
 export function DashboardPage() {
   const { user, dashboardRole, setDashboardRole } = useAuthStore()
   const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const openCall = useOpenSessionCall()
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -514,7 +514,7 @@ export function DashboardPage() {
                           <MessageSquare className="h-3.5 w-3.5" /> Message
                         </Link>
                         <button
-                          onClick={() => { if (session.action === 'Join') navigate(`/sessions/${session.id}/call`) }}
+                          onClick={() => { if (session.action === 'Join') openCall(session.id) }}
                           className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                             session.action === 'Join'
                               ? 'bg-primary text-white hover:bg-primary/90'
@@ -581,7 +581,7 @@ export function DashboardPage() {
                             <MessageSquare className="h-3.5 w-3.5" /> Message
                           </Link>
                           <button
-                            onClick={() => { if (session.action === 'Join') navigate(`/sessions/${session.id}/call`) }}
+                            onClick={() => { if (session.action === 'Join') openCall(session.id) }}
                             className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                               session.action === 'Join' || session.action === 'Accept'
                                 ? 'bg-primary text-white hover:bg-primary/90'
