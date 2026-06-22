@@ -172,7 +172,7 @@ export function SessionsPage() {
                             Reschedule
                           </button>
                           <button
-                            onClick={() => navigate(`/sessions/${session.id}/call`)}
+                            onClick={() => openCall(session.id)}
                             disabled={session.status !== 'CONFIRMED'}
                             className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                           >
