@@ -6,7 +6,8 @@ import type { AuthenticatedRequest } from '../middleware/requireAuth'
 export async function getConversations(req: AuthenticatedRequest, res: Response) {
   const userId = req.auth?.userId
   if (!userId) throw new AppError('Missing user context', 401)
-  const result = await messageService.getConversations(userId)
+  const role = req.query['role'] === 'GUIDE' ? 'GUIDE' : 'SEEKER'
+  const result = await messageService.getConversations(userId, role)
   res.json(result)
 }
 

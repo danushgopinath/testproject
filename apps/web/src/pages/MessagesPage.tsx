@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { Search, MoreVertical, ArrowLeft, Send } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
+import { useAuthStore } from '../stores/authStore'
 import { useConversations, useThread, useSendMessage } from '../hooks/useMessages'
 
 function formatMessageTime(iso: string) {
@@ -36,7 +37,10 @@ export function MessagesPage() {
   const [searchParams] = useSearchParams()
   const withParam = searchParams.get('with')
 
-  const { data: conversations = [], isLoading: convsLoading } = useConversations()
+  const { dashboardRole, user } = useAuthStore()
+  const activeRole = (dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')
+
+  const { data: conversations = [], isLoading: convsLoading } = useConversations(activeRole)
   const { data: thread = [] } = useThread(activeUserId)
   const sendMessage = useSendMessage()
 

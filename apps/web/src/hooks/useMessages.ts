@@ -19,11 +19,11 @@ export interface ThreadMessage {
   createdAt: string
 }
 
-export function useConversations() {
+export function useConversations(role: 'SEEKER' | 'GUIDE' = 'SEEKER') {
   return useQuery({
-    queryKey: ['messages', 'conversations'],
+    queryKey: ['messages', 'conversations', role],
     queryFn: async () => {
-      const res = await apiClient.get<Conversation[]>('/messages/conversations')
+      const res = await apiClient.get<Conversation[]>('/messages/conversations', { params: { role } })
       return res.data
     },
     refetchInterval: 3000,

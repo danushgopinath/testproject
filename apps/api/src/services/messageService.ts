@@ -9,152 +9,93 @@ function initials(first: string | null | undefined, last: string | null | undefi
 
 export const messageService = {
   /**
-   * Conversation list = union of:
-   *   1. All users this user has exchanged messages with
-   *   2. All users this user has a PENDING/CONFIRMED/COMPLETED session with
+   * Role-scoped conversation list. Messaging mirrors the session relationship:
+   *   - SEEKER role: only the guides you have a session with (you're the seeker)
+   *   - GUIDE role:  only the seekers who have a session with you (you're the guide)
    *
-   * Users that have a session but no messages yet show with empty lastMessage
+   * Partners with a session but no messages yet show with empty lastMessage
    * (the UI renders a "Start a conversation" empty state for these).
    */
-  async getConversations(userId: string) {
-    const seekerProfile = await prisma.seekerProfile.findUnique({
-      where: { userId },
-      select: { id: true },
+  async getConversations(userId: string, role: 'SEEKER' | 'GUIDE') {
+    const profile = role === 'SEEKER'
+      ? await prisma.seekerProfile.findUnique({ where: { userId }, select: { id: true } })
+      : await prisma.guideProfile.findUnique({ where: { userId }, select: { id: true } })
+    if (!profile) return []
+
+    // Sessions in this role direction define who can be messaged.
+    const sessions = await prisma.session.findMany({
+      where: {
+        ...(role === 'SEEKER' ? { seekerId: profile.id } : { guideId: profile.id }),
+        status: { in: ['PENDING', 'CONFIRMED', 'COMPLETED'] },
+      },
+      include: {
+        seeker: { include: { user: true } },
+        guide: { include: { user: true } },
+      },
     })
-    const guideProfile = await prisma.guideProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    })
 
-    // Step 1 — fetch all sessions where this user is either seeker OR guide
-    const sessionOr: { seekerId?: string; guideId?: string }[] = []
-    if (seekerProfile) sessionOr.push({ seekerId: seekerProfile.id })
-    if (guideProfile) sessionOr.push({ guideId: guideProfile.id })
-
-    const sessions = sessionOr.length === 0
-      ? []
-      : await prisma.session.findMany({
-          where: {
-            OR: sessionOr as any,
-            status: { in: ['PENDING', 'CONFIRMED', 'COMPLETED'] },
-          },
-          include: {
-            seeker: { include: { user: true } },
-            guide: { include: { user: true } },
-          },
-        })
-
-    const otherUsersFromSessions = new Map<string, {
+    const partners = new Map<string, {
       firstName: string
       lastName: string
-      currentRole?: string | null
-      currentCompany?: string | null
-      headline?: string | null
-      guideProfileId?: string | null
+      title: string
+      guideProfileId: string | null
     }>()
     for (const s of sessions) {
-      const isSeeker = s.seeker.userId === userId
-      const otherUserId = isSeeker ? s.guide.userId : s.seeker.userId
-      if (otherUserId === userId) continue // skip self
-      if (otherUsersFromSessions.has(otherUserId)) continue
-      const otherUser = isSeeker ? s.guide.user : s.seeker.user
-      otherUsersFromSessions.set(otherUserId, {
+      const otherUser = role === 'SEEKER' ? s.guide.user : s.seeker.user
+      if (otherUser.id === userId || partners.has(otherUser.id)) continue
+      const title = role === 'SEEKER'
+        ? s.guide.currentRole
+          ? `${s.guide.currentRole}${s.guide.currentCompany ? ` @ ${s.guide.currentCompany}` : ''}`
+          : (s.guide.headline ?? '')
+        : 'Seeker'
+      partners.set(otherUser.id, {
         firstName: otherUser.firstName,
         lastName: otherUser.lastName,
-        currentRole: isSeeker ? s.guide.currentRole : null,
-        currentCompany: isSeeker ? s.guide.currentCompany : null,
-        headline: isSeeker ? s.guide.headline : null,
-        guideProfileId: isSeeker ? s.guide.id : null,
+        title,
+        guideProfileId: role === 'SEEKER' ? s.guide.id : null,
       })
     }
 
-    // Step 2 — fetch all messages
+    if (partners.size === 0) return []
+    const allowedIds = new Set(partners.keys())
+
+    // Last message + unread count per allowed partner only.
     const messages = await prisma.message.findMany({
       where: { OR: [{ senderId: userId }, { receiverId: userId }] },
       orderBy: { createdAt: 'desc' },
-      include: { sender: true, receiver: true },
     })
 
-    const convMap = new Map<string, {
-      otherUserId: string
-      firstName: string
-      lastName: string
-      lastMessage: string
-      lastMessageAt: string | null
-      unreadCount: number
-    }>()
-
+    const convMap = new Map<string, { lastMessage: string; lastMessageAt: string; unreadCount: number }>()
     for (const msg of messages) {
       const isFromMe = msg.senderId === userId
       const otherId = isFromMe ? msg.receiverId : msg.senderId
-      const otherUser = isFromMe ? msg.receiver : msg.sender
-
+      if (!allowedIds.has(otherId)) continue
       if (!convMap.has(otherId)) {
-        convMap.set(otherId, {
-          otherUserId: otherId,
-          firstName: otherUser.firstName,
-          lastName: otherUser.lastName,
-          lastMessage: msg.content,
-          lastMessageAt: msg.createdAt.toISOString(),
-          unreadCount: 0,
-        })
+        convMap.set(otherId, { lastMessage: msg.content, lastMessageAt: msg.createdAt.toISOString(), unreadCount: 0 })
       }
-      if (!isFromMe && !msg.isRead) {
-        convMap.get(otherId)!.unreadCount++
-      }
+      if (!isFromMe && !msg.isRead) convMap.get(otherId)!.unreadCount++
     }
 
-    // Step 3 — add session-only entries (no messages exchanged yet)
-    for (const [otherUserId, info] of otherUsersFromSessions) {
-      if (!convMap.has(otherUserId)) {
-        convMap.set(otherUserId, {
-          otherUserId,
-          firstName: info.firstName,
-          lastName: info.lastName,
-          lastMessage: '',
-          lastMessageAt: null,
-          unreadCount: 0,
-        })
-      }
-    }
-
-    if (convMap.size === 0) return []
-
-    // Step 4 — enrich with guide profile info
-    const otherIds = Array.from(convMap.keys())
-    const guideProfiles = await prisma.guideProfile.findMany({
-      where: { userId: { in: otherIds } },
-      select: { id: true, userId: true, currentRole: true, currentCompany: true, headline: true },
-    })
-    const guideMap = new Map(guideProfiles.map((g) => [g.userId, g]))
-
-    return Array.from(convMap.values())
+    return Array.from(partners.entries())
+      .map(([otherUserId, info]) => {
+        const conv = convMap.get(otherUserId)
+        return {
+          userId: otherUserId,
+          name: `${info.firstName} ${info.lastName}`.trim() || 'Unknown',
+          initials: initials(info.firstName, info.lastName),
+          title: info.title,
+          guideProfileId: info.guideProfileId,
+          lastMessage: conv?.lastMessage ?? '',
+          lastMessageAt: conv?.lastMessageAt ?? '',
+          unreadCount: conv?.unreadCount ?? 0,
+        }
+      })
       .sort((a, b) => {
         // newest message first; conversations without messages go last
-        if (a.lastMessageAt && b.lastMessageAt) {
-          return b.lastMessageAt.localeCompare(a.lastMessageAt)
-        }
+        if (a.lastMessageAt && b.lastMessageAt) return b.lastMessageAt.localeCompare(a.lastMessageAt)
         if (a.lastMessageAt) return -1
         if (b.lastMessageAt) return 1
         return 0
-      })
-      .map(({ otherUserId, firstName, lastName, lastMessage, lastMessageAt, unreadCount }) => {
-        const guide = guideMap.get(otherUserId)
-        const title = guide
-          ? guide.currentRole
-            ? `${guide.currentRole}${guide.currentCompany ? ` @ ${guide.currentCompany}` : ''}`
-            : (guide.headline ?? '')
-          : ''
-        return {
-          userId: otherUserId,
-          name: `${firstName} ${lastName}`.trim() || 'Unknown',
-          initials: initials(firstName, lastName),
-          title,
-          guideProfileId: guide?.id ?? null,
-          lastMessage,
-          lastMessageAt: lastMessageAt ?? '',
-          unreadCount,
-        }
       })
   },
 
