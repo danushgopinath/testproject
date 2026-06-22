@@ -13,6 +13,7 @@ import { sessionRoutes } from './routes/sessionRoutes'
 import { messageRoutes } from './routes/messageRoutes'
 import { userRoutes } from './routes/userRoutes'
 import { notificationRoutes } from './routes/notificationRoutes'
+import { reviewRoutes } from './routes/reviewRoutes'
 
 const app = express()
 
@@ -38,6 +39,7 @@ app.use('/api/v1/sessions', sessionRoutes)
 app.use('/api/v1/messages', messageRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
+app.use('/api/v1/reviews', reviewRoutes)
 
 app.use(errorHandler)
 

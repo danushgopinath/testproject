@@ -20,7 +20,11 @@ export const dailyService = {
    */
   async createRoom({ name, expiresAt }: { name: string; expiresAt: Date }): Promise<{ name: string; url: string }> {
     const { apiKey, apiUrl, domain } = requireConfig()
-    const url = `https://${domain}.daily.co/${name}`
+    // Accept either the bare subdomain ("acme") or the full host
+    // ("acme.daily.co", with or without protocol) — normalize to the host.
+    const host = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+    const baseHost = host.endsWith('.daily.co') ? host : `${host}.daily.co`
+    const url = `https://${baseHost}/${name}`
 
     const res = await fetch(`${apiUrl}/rooms`, {
       method: 'POST',

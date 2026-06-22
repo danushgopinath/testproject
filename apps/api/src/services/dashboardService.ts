@@ -9,12 +9,16 @@ function initials(firstName: string | null | undefined, lastName: string | null 
 // Lazily flip session statuses based on elapsed time.
 // CONFIRMED + end time passed → COMPLETED
 // PENDING   + end time passed → CANCELLED (missed / never accepted)
-async function autoUpdateSessions(seekerId: string) {
+//
+// Runs as a global sweep (across both seekers and guides) so a session
+// transitions regardless of which side loads their dashboard. Previously this
+// was seeker-scoped, which left guide-side sessions stuck as CONFIRMED and
+// never moved them into "past".
+async function autoUpdateSessions() {
   const now = new Date()
 
   const active = await prisma.session.findMany({
     where: {
-      seekerId,
       status: { in: ['CONFIRMED', 'PENDING'] },
     },
     select: { id: true, status: true, scheduledAt: true, durationMinutes: true },
@@ -37,6 +41,44 @@ async function autoUpdateSessions(seekerId: string) {
     toCancel.length > 0 &&
       prisma.session.updateMany({ where: { id: { in: toCancel } }, data: { status: 'CANCELLED' } }),
   ])
+}
+
+// Most recent message per conversation partner (last message only), newest
+// first. Used by both dashboards so "Recent Messages" shows one row per person.
+async function recentConversations(userId: string) {
+  const msgs = await prisma.message.findMany({
+    where: { OR: [{ senderId: userId }, { receiverId: userId }] },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: { sender: true, receiver: true },
+  })
+
+  const seen = new Set<string>()
+  const out: {
+    id: string
+    name: string
+    initials: string
+    message: string
+    createdAt: string
+    isUnread: boolean
+  }[] = []
+
+  for (const m of msgs) {
+    const other = m.senderId === userId ? m.receiver : m.sender
+    if (seen.has(other.id)) continue
+    seen.add(other.id)
+    out.push({
+      id: m.id,
+      name: `${other.firstName} ${other.lastName}`.trim(),
+      initials: initials(other.firstName, other.lastName),
+      message: m.content,
+      createdAt: m.createdAt.toISOString(),
+      isUnread: m.receiverId === userId ? !m.isRead : false,
+    })
+    if (out.length >= 5) break
+  }
+
+  return out
 }
 
 export const dashboardService = {
@@ -121,7 +163,7 @@ export const dashboardService = {
       }
     }
 
-    await autoUpdateSessions(seekerProfile.id)
+    await autoUpdateSessions()
 
     const now = new Date()
 
@@ -158,12 +200,7 @@ export const dashboardService = {
       include: { guide: { include: { user: true } } },
     })
 
-    const recentMessages = await prisma.message.findMany({
-      where: { OR: [{ senderId: userId }, { receiverId: userId }] },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: { sender: true, receiver: true },
-    })
+    const recentMessages = await recentConversations(userId)
 
     return {
       stats: {
@@ -188,17 +225,7 @@ export const dashboardService = {
           status: s.status,
         }
       }),
-      recentMessages: recentMessages.map((m) => {
-        const other = m.senderId === userId ? m.receiver : m.sender
-        return {
-          id: m.id,
-          name: `${other.firstName} ${other.lastName}`.trim(),
-          initials: initials(other.firstName, other.lastName),
-          message: m.content,
-          createdAt: m.createdAt.toISOString(),
-          isUnread: m.receiverId === userId ? !m.isRead : false,
-        }
-      }),
+      recentMessages,
     }
   },
 
@@ -343,7 +370,7 @@ export const dashboardService = {
 
     if (!seekerProfile) return { upcoming: [], past: [] }
 
-    await autoUpdateSessions(seekerProfile.id)
+    await autoUpdateSessions()
 
     const all = await prisma.session.findMany({
       where: { seekerId: seekerProfile.id },
@@ -391,7 +418,7 @@ export const dashboardService = {
       }
     }
 
-    await autoUpdateSessions(seekerProfile.id)
+    await autoUpdateSessions()
 
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -451,10 +478,13 @@ export const dashboardService = {
       return {
         stats: { upcomingSessions: 0, pendingRequests: 0, monthlyEarnings: 0, avgRating: null as number | null },
         upcomingSessions: [],
+        pastSessions: [],
         pendingRequests: [],
         recentMessages: [],
       }
     }
+
+    await autoUpdateSessions()
 
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -491,12 +521,14 @@ export const dashboardService = {
       include: { seeker: { include: { user: true } } },
     })
 
-    const recentMessages = await prisma.message.findMany({
-      where: { OR: [{ senderId: userId }, { receiverId: userId }] },
-      orderBy: { createdAt: 'desc' },
+    const pastSessions = await prisma.session.findMany({
+      where: { guideId: guideProfile.id, status: { in: ['COMPLETED', 'CANCELLED'] } },
+      orderBy: { scheduledAt: 'desc' },
       take: 5,
-      include: { sender: true, receiver: true },
+      include: { seeker: { include: { user: true } } },
     })
+
+    const recentMessages = await recentConversations(userId)
 
     // Monthly earnings: sum totalCost of confirmed/completed sessions this month
     const monthlyEarningsAgg = await prisma.session.aggregate({
@@ -530,6 +562,20 @@ export const dashboardService = {
           status: s.status,
         }
       }),
+      pastSessions: pastSessions.map((s) => {
+        const u = s.seeker.user
+        return {
+          id: s.id,
+          otherUserId: u.id,
+          name: `${u.firstName} ${u.lastName}`.trim(),
+          initials: initials(u.firstName, u.lastName),
+          role: 'Seeker',
+          topic: s.topic,
+          scheduledAt: s.scheduledAt.toISOString(),
+          durationMinutes: s.durationMinutes,
+          status: s.status,
+        }
+      }),
       pendingRequests: pendingRequests.map((s) => {
         const u = s.seeker.user
         return {
@@ -542,17 +588,7 @@ export const dashboardService = {
           status: s.status,
         }
       }),
-      recentMessages: recentMessages.map((m) => {
-        const other = m.senderId === userId ? m.receiver : m.sender
-        return {
-          id: m.id,
-          name: `${other.firstName} ${other.lastName}`.trim(),
-          initials: initials(other.firstName, other.lastName),
-          message: m.content,
-          createdAt: m.createdAt.toISOString(),
-          isUnread: m.receiverId === userId ? !m.isRead : false,
-        }
-      }),
+      recentMessages,
     }
   },
 }
