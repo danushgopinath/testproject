@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, Calendar } from 'lucide-react'
+import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useMyReviewables, useCreateReview, type ReviewableSession } from '../hooks/useReviews'
 
 function StarRating({ value, onChange, readOnly }: { value: number; onChange?: (v: number) => void; readOnly?: boolean }) {
@@ -102,13 +103,16 @@ export function ReviewsPage() {
   const items = data ?? []
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-semibold text-text-primary">Reviews</h1>
-      <p className="mt-1 text-sm text-text-muted">
-        Rate the mentors you've completed sessions with.
-      </p>
+    <div className="flex w-full">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-x-hidden">
+        <div className="mx-auto w-full max-w-3xl px-6 py-8 md:px-8">
+          <h1 className="text-2xl font-semibold text-text-primary">Reviews</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            Rate the mentors you've completed sessions with.
+          </p>
 
-      <div className="mt-6 space-y-4">
+          <div className="mt-6 space-y-4">
         {isLoading && (
           <div className="rounded-xl border border-border bg-surface p-5 text-sm text-text-muted">
             Loading your completed sessions…
@@ -134,6 +138,8 @@ export function ReviewsPage() {
         {items.map((item) => (
           <ReviewCard key={item.sessionId} item={item} />
         ))}
+          </div>
+        </div>
       </div>
     </div>
   )
