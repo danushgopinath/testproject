@@ -556,7 +556,6 @@ export function DashboardPage() {
                               <h3 className="font-medium text-text-primary">{session.name}</h3>
                               {getStatusBadge(session.status)}
                             </div>
-                            <p className="mt-1 text-sm text-text-muted">{session.role}</p>
                             <p className="mt-1 text-sm font-medium text-text-primary">{session.topic}</p>
                             <div className="mt-2 flex items-center gap-4 text-xs text-text-muted">
                               <span className="flex items-center gap-1">
