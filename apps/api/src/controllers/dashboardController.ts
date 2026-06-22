@@ -41,6 +41,13 @@ export async function getSeekerSessions(req: AuthenticatedRequest, res: Response
   res.json(result)
 }
 
+export async function getGuideSessions(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Missing user context', 401)
+  const result = await dashboardService.getGuideSessions(userId)
+  res.json(result)
+}
+
 export async function getSeekerAnalytics(req: AuthenticatedRequest, res: Response) {
   const userId = req.auth?.userId
   if (!userId) throw new AppError('Missing user context', 401)

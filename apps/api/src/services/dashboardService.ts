@@ -405,6 +405,47 @@ export const dashboardService = {
     }
   },
 
+  async getGuideSessions(userId: string) {
+    const guideProfile = await prisma.guideProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    })
+
+    if (!guideProfile) return { upcoming: [], past: [] }
+
+    await autoUpdateSessions()
+
+    const all = await prisma.session.findMany({
+      where: { guideId: guideProfile.id },
+      orderBy: { scheduledAt: 'asc' },
+      include: { seeker: { include: { user: true } } },
+    })
+
+    const mapSession = (s: typeof all[number]) => {
+      const u = s.seeker.user
+      return {
+        id: s.id,
+        status: s.status,
+        name: `${u.firstName} ${u.lastName}`.trim(),
+        initials: initials(u.firstName, u.lastName),
+        role: 'Seeker',
+        otherUserId: u.id,
+        topic: s.topic,
+        scheduledAt: s.scheduledAt.toISOString(),
+        durationMinutes: s.durationMinutes,
+        totalCost: s.totalCost, // cents
+      }
+    }
+
+    return {
+      upcoming: all.filter((s) => s.status === 'CONFIRMED' || s.status === 'PENDING').map(mapSession),
+      past: all
+        .filter((s) => s.status === 'COMPLETED' || s.status === 'CANCELLED')
+        .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime())
+        .map(mapSession),
+    }
+  },
+
   async getSeekerAnalytics(userId: string) {
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId },

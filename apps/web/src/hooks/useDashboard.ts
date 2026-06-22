@@ -215,11 +215,41 @@ export interface SeekerSessionsResponse {
   past: SeekerSessionItem[]
 }
 
-export function useSeekerSessions() {
+export function useSeekerSessions(enabled = true) {
   return useQuery({
+    enabled,
     queryKey: ['seeker', 'sessions'],
     queryFn: async () => {
       const res = await apiClient.get<SeekerSessionsResponse>('/dashboard/seeker/sessions')
+      return res.data
+    },
+  })
+}
+
+export interface GuideSessionItem {
+  id: string
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
+  name: string
+  initials: string
+  role: string
+  otherUserId: string
+  topic: string
+  scheduledAt: string
+  durationMinutes: number
+  totalCost: number // cents
+}
+
+export interface GuideSessionsResponse {
+  upcoming: GuideSessionItem[]
+  past: GuideSessionItem[]
+}
+
+export function useGuideSessions(enabled = true) {
+  return useQuery({
+    enabled,
+    queryKey: ['guide', 'sessions'],
+    queryFn: async () => {
+      const res = await apiClient.get<GuideSessionsResponse>('/dashboard/guide/sessions')
       return res.data
     },
   })
