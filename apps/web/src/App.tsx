@@ -11,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { MessagesPage } from './pages/MessagesPage'
 import { SessionsPage } from './pages/SessionsPage'
 import { SessionCallPage } from './pages/SessionCallPage'
+import { ReviewsPage } from './pages/ReviewsPage'
 import { ProfileSettingsPage } from './pages/settings/ProfileSettingsPage'
 import { PasswordSettingsPage } from './pages/settings/PasswordSettingsPage'
 import { NotificationsSettingsPage } from './pages/settings/NotificationsSettingsPage'
@@ -118,6 +119,7 @@ export function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/dashboard/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
         <Route path="/dashboard/seeker-requests" element={<ProtectedRoute><SeekerRequestsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/reviews" element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/spending" element={<ProtectedRoute><SpendingAnalyticsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/mentors" element={<ProtectedRoute><MentorsAnalyticsPage /></ProtectedRoute>} />
         <Route path="/dashboard/analytics/sessions" element={<ProtectedRoute><SessionHistoryPage /></ProtectedRoute>} />

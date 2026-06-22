@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Calendar, MessageSquare, Bell, DollarSign, Users, TrendingUp, BarChart3, X } from 'lucide-react'
+import { Calendar, MessageSquare, Bell, DollarSign, Users, TrendingUp, BarChart3, Star, X } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { useNotifications } from '../../hooks/useDashboard'
 import { cloneElement } from 'react'
@@ -35,6 +35,7 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
     { label: 'Sessions', icon: <Calendar className="h-5 w-5" />, path: '/sessions' },
     { label: 'Requests', icon: <Bell className="h-5 w-5" />, path: '/dashboard/seeker-requests', badge: pendingAwaitingConfirmation },
     { label: 'Messages', icon: <MessageSquare className="h-5 w-5" />, path: '/messages', badge: unreadMessages },
+    { label: 'Reviews', icon: <Star className="h-5 w-5" />, path: '/dashboard/reviews' },
   ]
 
   const guideManageItems: SidebarItem[] = [

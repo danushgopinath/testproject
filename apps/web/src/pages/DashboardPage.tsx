@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
-import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, GraduationCap, X } from 'lucide-react'
+import { Calendar, MessageSquare, Users, Star, Clock, Video, ArrowRight, Bell, X } from 'lucide-react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { MentorOnboardingForm } from '../components/organisms/MentorOnboardingForm'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
@@ -237,20 +237,31 @@ export function DashboardPage() {
   const guideSessionRequests =
     guideDashboard?.pendingRequests?.map((s) => {
       const dt = new Date(s.scheduledAt)
-      const dateLabel = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-      const timeLabel = dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
       return {
         id: s.id,
         name: s.name,
         initials: s.initials,
         role: 'Seeker',
-        school: '—',
         topic: s.topic,
-        message: 'New session request',
-        date: dateLabel,
-        time: timeLabel,
+        date: dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        time: dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
         duration: `${s.durationMinutes} min`,
-        timeAgo: '—',
+      }
+    }) ?? []
+
+  const guidePastSessions =
+    guideDashboard?.pastSessions?.map((s) => {
+      const dt = new Date(s.scheduledAt)
+      return {
+        id: s.id,
+        name: s.name,
+        initials: s.initials,
+        role: s.role,
+        topic: s.topic,
+        date: dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+        time: dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+        duration: `${s.durationMinutes} min`,
+        status: s.status,
       }
     }) ?? []
 
@@ -590,7 +601,7 @@ export function DashboardPage() {
               <div className="rounded-xl border border-border bg-surface p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-text-primary">Session Requests</h2>
-                  <Link to="/sessions" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  <Link to="/dashboard/requests" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                     View All <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -600,51 +611,97 @@ export function DashboardPage() {
                       Loading requests...
                     </div>
                   )}
+                  {!isGuideLoading && guideSessionRequests.length === 0 && (
+                    <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                      No pending session requests.
+                    </div>
+                  )}
                   {guideSessionRequests.map((request) => (
                     <div key={request.id} className="rounded-lg border border-border bg-background p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                             {request.initials}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-medium text-text-primary">{request.name}</h3>
                               <span className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
                                 {request.role}
                               </span>
                             </div>
-                            <div className="mt-1 flex items-center gap-1 text-sm text-text-muted">
-                              <GraduationCap className="h-3 w-3" />
-                              {request.school}
-                            </div>
                             <p className="mt-1 text-sm font-medium text-text-primary">{request.topic}</p>
-                            <p className="mt-1 text-sm text-text-muted line-clamp-2">{request.message}</p>
                             <div className="mt-2 flex items-center gap-4 text-xs text-text-muted">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {request.date} {request.time} {request.duration}
-                              </span>
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{request.date}</span>
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{request.time}</span>
+                              <span className="flex items-center gap-1"><Video className="h-3 w-3" />{request.duration}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="ml-4 flex flex-col gap-2">
-                          <span className="text-xs text-text-muted">{request.timeAgo}</span>
-                          <div className="flex gap-2">
-                            <button
-                              disabled={declineSession.isPending || acceptSession.isPending}
-                              onClick={() => declineSession.mutate(request.id)}
-                              className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
-                            >
-                              ✕ Decline
-                            </button>
-                            <button
-                              disabled={acceptSession.isPending || declineSession.isPending}
-                              onClick={() => acceptSession.mutate(request.id)}
-                              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
-                            >
-                              ✓ Accept
-                            </button>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button
+                            disabled={acceptSession.isPending || declineSession.isPending}
+                            onClick={() => acceptSession.mutate(request.id)}
+                            className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                          >
+                            Admit
+                          </button>
+                          <button
+                            disabled={declineSession.isPending || acceptSession.isPending}
+                            onClick={() => declineSession.mutate(request.id)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border bg-surface p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-text-primary">Past Sessions</h2>
+                  <Link to="/sessions" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    View All <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+                <div className="space-y-4">
+                  {isGuideLoading && (
+                    <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                      Loading past sessions...
+                    </div>
+                  )}
+                  {!isGuideLoading && guidePastSessions.length === 0 && (
+                    <div className="rounded-lg border border-border bg-background p-4 text-sm text-text-muted">
+                      No past sessions yet.
+                    </div>
+                  )}
+                  {guidePastSessions.map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border bg-background p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                            {s.initials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-medium text-text-primary">{s.name}</h3>
+                              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                s.status === 'COMPLETED'
+                                  ? 'border-green-200 bg-green-100 text-green-800'
+                                  : 'border-gray-200 bg-gray-100 text-gray-700'
+                              }`}>
+                                {s.status === 'COMPLETED' ? 'Completed' : 'Cancelled'}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm font-medium text-text-primary">{s.topic}</p>
+                            <div className="mt-2 flex items-center gap-4 text-xs text-text-muted">
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{s.date}</span>
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{s.time}</span>
+                              <span className="flex items-center gap-1"><Video className="h-3 w-3" />{s.duration}</span>
+                            </div>
                           </div>
                         </div>
                       </div>

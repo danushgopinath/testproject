@@ -273,7 +273,7 @@ export function Layout({ children }: LayoutProps) {
                   {isDashboard && (
                     <RoleSwitcher
                       currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
-                      onRoleChange={setDashboardRole}
+                      onRoleChange={(r) => { setDashboardRole(r); navigate('/dashboard') }}
                     />
                   )}
                   <Link to="/dashboard" className="px-4 py-1.5 text-xs font-semibold uppercase tracking-widest rounded-full transition-all text-[#0f172a] bg-gradient-to-br from-gray-100 to-gray-300 hover:from-white hover:to-gray-200">
@@ -370,7 +370,7 @@ export function Layout({ children }: LayoutProps) {
                   <div className="w-full mb-3 flex justify-center">
                     <RoleSwitcher
                       currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
-                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false) }}
+                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false); navigate('/dashboard') }}
                     />
                   </div>
                 )}
@@ -424,7 +424,7 @@ export function Layout({ children }: LayoutProps) {
                   {isDashboard && (
                     <RoleSwitcher
                       currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
-                      onRoleChange={setDashboardRole}
+                      onRoleChange={(r) => { setDashboardRole(r); navigate('/dashboard') }}
                     />
                   )}
                   <Link to="/dashboard" className="px-3 py-1.5 text-xs font-medium border border-[#070738]/20 rounded-full text-[#070738]/70 hover:border-[#070738]/50 hover:text-[#070738] transition-colors">
@@ -521,7 +521,7 @@ export function Layout({ children }: LayoutProps) {
                   <div className="mb-3 flex">
                     <RoleSwitcher
                       currentRole={(dashboardRole as 'SEEKER' | 'GUIDE') || ((user?.role as 'SEEKER' | 'GUIDE') ?? 'SEEKER')}
-                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false) }}
+                      onRoleChange={(r) => { setDashboardRole(r); setShowMobileNav(false); navigate('/dashboard') }}
                     />
                   </div>
                 )}

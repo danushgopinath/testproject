@@ -163,6 +163,17 @@ export interface GuideDashboardResponse {
     durationMinutes: number
     status: 'PENDING' | 'CONFIRMED'
   }[]
+  pastSessions: {
+    id: string
+    otherUserId: string
+    name: string
+    initials: string
+    role: string
+    topic: string
+    scheduledAt: string
+    durationMinutes: number
+    status: 'COMPLETED' | 'CANCELLED'
+  }[]
   pendingRequests: {
     id: string
     name: string
