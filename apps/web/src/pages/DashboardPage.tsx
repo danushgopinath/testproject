@@ -8,6 +8,7 @@ import { useGuideDashboard, useMyProfile, useSeekerDashboard } from '../hooks/us
 import { useAcceptSession, useDeclineSession, useOpenSessionCall } from '../hooks/useSessions'
 import { onboardingApi } from '../services/onboardingService'
 import { useQueryClient } from '@tanstack/react-query'
+import { googleCalendarUrl } from '../lib/calendar'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
@@ -229,6 +230,8 @@ export function DashboardPage() {
         date: dateLabel,
         time: timeLabel,
         duration: `${s.durationMinutes} min`,
+        scheduledAt: s.scheduledAt,
+        durationMinutes: s.durationMinutes,
         status,
         action: s.status === 'CONFIRMED' ? 'Join' : 'View Details',
       }
@@ -570,6 +573,19 @@ export function DashboardPage() {
                                 <Video className="h-3 w-3" />
                                 {session.duration}
                               </span>
+                              <a
+                                href={googleCalendarUrl({
+                                  title: `Expertify session with ${session.name}`,
+                                  startISO: session.scheduledAt,
+                                  durationMinutes: session.durationMinutes,
+                                  details: session.topic,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 font-medium text-primary hover:underline"
+                              >
+                                <Calendar className="h-3 w-3" />Add to calendar
+                              </a>
                             </div>
                           </div>
                         </div>

@@ -5,6 +5,7 @@ import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useAuthStore } from '../stores/authStore'
 import { useOpenSessionCall } from '../hooks/useSessions'
 import { CancelSessionModal, type CancelTarget } from '../components/organisms/CancelSessionModal'
+import { googleCalendarUrl } from '../lib/calendar'
 import {
   useSeekerSessions,
   useGuideSessions,
@@ -146,6 +147,21 @@ export function SessionsPage() {
                           <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeLabel}</span>
                           <span className="flex items-center gap-1"><Video className="h-3 w-3" />{session.durationMinutes} min</span>
                           <span className="font-medium text-text-primary">{costLabel}</span>
+                          {(session.status === 'CONFIRMED' || session.status === 'PENDING') && (
+                            <a
+                              href={googleCalendarUrl({
+                                title: `Expertify session with ${session.name}`,
+                                startISO: session.scheduledAt,
+                                durationMinutes: session.durationMinutes,
+                                details: session.topic,
+                              })}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 font-medium text-primary hover:underline"
+                            >
+                              <Calendar className="h-3 w-3" />Add to calendar
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
