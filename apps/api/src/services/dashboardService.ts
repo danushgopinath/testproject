@@ -223,6 +223,7 @@ export const dashboardService = {
           topic: s.topic,
           scheduledAt: s.scheduledAt.toISOString(),
           durationMinutes: s.durationMinutes,
+          totalCost: s.totalCost,
           status: s.status,
         }
       }),

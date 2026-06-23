@@ -196,14 +196,14 @@ export function SessionsPage() {
                                 totalCost: session.totalCost,
                               })
                             }
-                            className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                            className="w-full md:w-32 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => openCall(session.id)}
                             disabled={session.status !== 'CONFIRMED'}
-                            className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full md:w-32 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Join Session
                           </button>

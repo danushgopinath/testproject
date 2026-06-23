@@ -9,6 +9,7 @@ import { useAcceptSession, useDeclineSession, useOpenSessionCall } from '../hook
 import { onboardingApi } from '../services/onboardingService'
 import { useQueryClient } from '@tanstack/react-query'
 import { googleCalendarUrl } from '../lib/calendar'
+import { CancelSessionModal, type CancelTarget } from '../components/organisms/CancelSessionModal'
 import { ALL_TIMEZONES, browserTimeZone, tzShortLabel } from '../lib/timezones'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
@@ -24,6 +25,7 @@ export function DashboardPage() {
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [dayTimes, setDayTimes] = useState<Record<string, string[]>>({})
   const [availabilityTz, setAvailabilityTz] = useState<string>(browserTimeZone())
+  const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null)
   const [savingAvailability, setSavingAvailability] = useState(false)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
 
@@ -212,6 +214,9 @@ export function DashboardPage() {
         date: dateLabel,
         time: timeLabel,
         duration: `${s.durationMinutes} min`,
+        scheduledAt: s.scheduledAt,
+        totalCost: s.totalCost,
+        rawStatus: s.status,
         status,
         action: s.status === 'CONFIRMED' ? 'Join' : 'View Details',
       }
@@ -528,6 +533,18 @@ export function DashboardPage() {
                           }`}
                         >
                           {session.action}
+                        </button>
+                        <button
+                          onClick={() => setCancelTarget({
+                            id: session.id,
+                            name: session.name,
+                            status: session.rawStatus,
+                            scheduledAt: session.scheduledAt,
+                            totalCost: session.totalCost,
+                          })}
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          Cancel
                         </button>
                       </div>
                     </div>
@@ -918,6 +935,10 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {cancelTarget && (
+        <CancelSessionModal session={cancelTarget} onClose={() => setCancelTarget(null)} />
       )}
         </div>
       </div>

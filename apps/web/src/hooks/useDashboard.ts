@@ -123,6 +123,7 @@ export interface SeekerDashboardResponse {
     topic: string
     scheduledAt: string
     durationMinutes: number
+    totalCost: number
     status: 'PENDING' | 'CONFIRMED'
   }[]
   recentMessages: {
