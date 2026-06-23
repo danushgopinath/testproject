@@ -51,7 +51,11 @@ export async function me(req: Request, res: Response) {
 }
 
 export async function refresh(req: Request, res: Response) {
-  const refreshToken = req.cookies?.refreshToken as string | undefined
+  // Prefer the httpOnly cookie; fall back to a token in the body for clients
+  // whose browser drops the third-party cookie (cross-domain Vercel/Railway).
+  const refreshToken =
+    (req.cookies?.refreshToken as string | undefined) ||
+    (req.body?.refreshToken as string | undefined)
   if (!refreshToken) {
     throw new AuthError('No refresh token', 401)
   }

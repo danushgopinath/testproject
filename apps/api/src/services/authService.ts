@@ -104,6 +104,9 @@ export const authService = {
     return {
       user: await sanitizeUser(user),
       accessToken,
+      // Also returned so the SPA can persist it and refresh without relying on
+      // the httpOnly cookie (which third-party-cookie blockers drop cross-domain).
+      refreshToken,
     }
   },
 
@@ -131,6 +134,9 @@ export const authService = {
     return {
       user: await sanitizeUser(user),
       accessToken,
+      // Also returned so the SPA can persist it and refresh without relying on
+      // the httpOnly cookie (which third-party-cookie blockers drop cross-domain).
+      refreshToken,
     }
   },
 
@@ -225,6 +231,9 @@ export const authService = {
     return {
       user: await sanitizeUser(user),
       accessToken,
+      // Also returned so the SPA can persist it and refresh without relying on
+      // the httpOnly cookie (which third-party-cookie blockers drop cross-domain).
+      refreshToken,
     }
   },
 
@@ -336,6 +345,9 @@ export const authService = {
     return {
       user: await sanitizeUser(user),
       accessToken,
+      // Also returned so the SPA can persist it and refresh without relying on
+      // the httpOnly cookie (which third-party-cookie blockers drop cross-domain).
+      refreshToken,
     }
   },
 
@@ -367,6 +379,7 @@ export const authService = {
       return {
         user: await sanitizeUser(user),
         accessToken,
+        refreshToken: newRefreshToken,
       }
     } catch {
       throw new AuthError('Invalid or expired refresh token', 401)

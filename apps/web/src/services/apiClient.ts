@@ -43,11 +43,12 @@ apiClient.interceptors.response.use(
     ) {
       originalRequest._retry = true
       try {
-        const res = await apiClient.post('/auth/refresh')
-        const { accessToken } = res.data
         // Lazily import to avoid circular dependency at module load time
         const { useAuthStore } = await import('../stores/authStore')
-        useAuthStore.getState().setAuth(res.data.user, accessToken)
+        const refreshToken = useAuthStore.getState().refreshToken
+        const res = await apiClient.post('/auth/refresh', { refreshToken })
+        const { accessToken } = res.data
+        useAuthStore.getState().setAuth(res.data.user, accessToken, res.data.refreshToken ?? null)
         originalRequest.headers['Authorization'] = `Bearer ${accessToken}`
         return apiClient(originalRequest)
       } catch {
