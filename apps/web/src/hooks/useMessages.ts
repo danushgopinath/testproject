@@ -59,3 +59,29 @@ export function useSendMessage() {
     },
   })
 }
+
+export function useDeleteMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (messageId: string) => {
+      await apiClient.delete(`/messages/${messageId}`)
+      return messageId
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] })
+    },
+  })
+}
+
+export function useDeleteConversation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (otherId: string) => {
+      await apiClient.delete(`/messages/conversations/${otherId}`)
+      return otherId
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] })
+    },
+  })
+}

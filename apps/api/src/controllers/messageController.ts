@@ -31,3 +31,21 @@ export async function sendMessage(req: AuthenticatedRequest, res: Response) {
   const result = await messageService.sendMessage(userId, receiverId, content.trim())
   res.status(201).json(result)
 }
+
+export async function deleteMessage(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Missing user context', 401)
+  const messageId = req.params['id'] as string
+  if (!messageId) throw new AppError('Missing message id', 400)
+  const result = await messageService.deleteMessage(userId, messageId)
+  res.json(result)
+}
+
+export async function deleteConversation(req: AuthenticatedRequest, res: Response) {
+  const userId = req.auth?.userId
+  if (!userId) throw new AppError('Missing user context', 401)
+  const otherId = req.params['otherId'] as string
+  if (!otherId) throw new AppError('Missing otherId', 400)
+  const result = await messageService.deleteConversation(userId, otherId)
+  res.json(result)
+}

@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma'
 import { notificationService } from './notificationService'
+import { AppError } from '../utils/errors'
 
 function initials(first: string | null | undefined, last: string | null | undefined) {
   const a = (first?.trim()?.[0] ?? '').toUpperCase()
@@ -122,6 +123,31 @@ export const messageService = {
       content: m.content,
       createdAt: m.createdAt.toISOString(),
     }))
+  },
+
+  /** Delete a single message — only the sender may delete it (removes for both). */
+  async deleteMessage(userId: string, messageId: string) {
+    const msg = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { id: true, senderId: true },
+    })
+    if (!msg) throw new AppError('Message not found', 404)
+    if (msg.senderId !== userId) throw new AppError('You can only delete your own messages', 403)
+    await prisma.message.delete({ where: { id: messageId } })
+    return { id: messageId }
+  },
+
+  /** Delete the entire conversation between the user and another user (both directions). */
+  async deleteConversation(userId: string, otherId: string) {
+    const result = await prisma.message.deleteMany({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: otherId },
+          { senderId: otherId, receiverId: userId },
+        ],
+      },
+    })
+    return { deleted: result.count }
   },
 
   async sendMessage(senderId: string, receiverId: string, content: string) {

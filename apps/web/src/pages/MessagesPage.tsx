@@ -1,9 +1,9 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { Search, MoreVertical, ArrowLeft, Send } from 'lucide-react'
+import { Search, MoreVertical, ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useAuthStore } from '../stores/authStore'
-import { useConversations, useThread, useSendMessage } from '../hooks/useMessages'
+import { useConversations, useThread, useSendMessage, useDeleteMessage, useDeleteConversation } from '../hooks/useMessages'
 
 function formatMessageTime(iso: string) {
   const d = new Date(iso)
@@ -43,6 +43,19 @@ export function MessagesPage() {
   const { data: conversations = [], isLoading: convsLoading } = useConversations(activeRole)
   const { data: thread = [] } = useThread(activeUserId)
   const sendMessage = useSendMessage()
+  const deleteMessage = useDeleteMessage()
+  const deleteConversation = useDeleteConversation()
+
+  const handleDeleteConversation = () => {
+    if (!activeUserId) return
+    if (!window.confirm('Delete this entire conversation? This cannot be undone.')) return
+    deleteConversation.mutate(activeUserId, {
+      onSuccess: () => {
+        setShowMenu(false)
+        setActiveUserId(null)
+      },
+    })
+  }
 
   // Honour ?with=<userId> deep links from "Message" buttons elsewhere
   useEffect(() => {
@@ -229,9 +242,9 @@ export function MessagesPage() {
                           )}
                           <button
                             className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50"
-                            onClick={() => setShowMenu(false)}
+                            onClick={handleDeleteConversation}
                           >
-                            Block user
+                            Delete conversation
                           </button>
                         </div>
                       )}
@@ -246,7 +259,16 @@ export function MessagesPage() {
                       </p>
                     )}
                     {thread.map((msg) => (
-                      <div key={msg.id} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
+                      <div key={msg.id} className={`group flex items-center gap-2 ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
+                        {msg.fromMe && (
+                          <button
+                            onClick={() => deleteMessage.mutate(msg.id)}
+                            title="Delete message"
+                            className="opacity-0 transition-opacity group-hover:opacity-100 text-text-muted hover:text-red-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                         <div
                           className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                             msg.fromMe
