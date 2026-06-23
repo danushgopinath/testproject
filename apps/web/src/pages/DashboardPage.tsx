@@ -517,7 +517,7 @@ export function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2 shrink-0">
+                      <div className="grid grid-cols-2 gap-2 shrink-0 w-56">
                         <Link
                           to={`/messages?with=${session.otherUserId}`}
                           className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text-primary hover:bg-background transition-colors"
@@ -542,7 +542,7 @@ export function DashboardPage() {
                             scheduledAt: session.scheduledAt,
                             totalCost: session.totalCost,
                           })}
-                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+                          className="col-start-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
                         >
                           Cancel
                         </button>
