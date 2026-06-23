@@ -9,6 +9,7 @@ import {
 import { notificationService } from './notificationService'
 import { dailyService } from './dailyService'
 import { evaluateJoinEligibility } from './video/joinEligibility'
+import { calculateRefund } from './session/cancellation'
 
 function fmtDate(d: Date) {
   return d.toLocaleString('en-US', {
@@ -250,6 +251,63 @@ export const sessionService = {
     }).catch(() => {})
 
     return { sessionId, status: 'CANCELLED' }
+  },
+
+  /**
+   * Seeker cancels their own session. PENDING is always free; CONFIRMED applies
+   * the tiered refund policy in `calculateRefund`. Returns the refund breakdown.
+   */
+  async cancelSession(seekerUserId: string, sessionId: string) {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        guide: { include: { user: true } },
+        seeker: { include: { user: true } },
+      },
+    })
+
+    if (!session) throw new AppError('Session not found', 404)
+    if (session.seeker.user.id !== seekerUserId) throw new AppError('Not authorized', 403)
+    if (session.status !== 'PENDING' && session.status !== 'CONFIRMED') {
+      throw new AppError('This session can no longer be cancelled', 400)
+    }
+
+    const refund = calculateRefund({
+      status: session.status,
+      scheduledAt: session.scheduledAt,
+      now: new Date(),
+      totalCost: session.totalCost,
+    })
+
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { status: 'CANCELLED' },
+    })
+
+    const seekerUser = session.seeker.user
+    const guideUser = session.guide.user
+    const seekerName = `${seekerUser.firstName} ${seekerUser.lastName}`
+    const dateStr = fmtDate(session.scheduledAt)
+
+    notificationService.create({
+      userId: guideUser.id,
+      type: 'SESSION_CANCELLED',
+      title: 'Session cancelled',
+      body: `${seekerName} cancelled the session scheduled for ${dateStr}.`,
+      link: '/sessions',
+      sessionId: session.id,
+    }).catch(() => {})
+
+    notificationService.create({
+      userId: seekerUser.id,
+      type: 'SESSION_CANCELLED',
+      title: 'You cancelled a session',
+      body: `Your session on ${dateStr} was cancelled. ${refund.label}.`,
+      link: '/sessions',
+      sessionId: session.id,
+    }).catch(() => {})
+
+    return { sessionId, status: 'CANCELLED', refund }
   },
 
   /**

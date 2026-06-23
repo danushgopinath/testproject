@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { DashboardSidebar } from '../components/organisms/DashboardSidebar'
 import { useAuthStore } from '../stores/authStore'
 import { useOpenSessionCall } from '../hooks/useSessions'
+import { CancelSessionModal, type CancelTarget } from '../components/organisms/CancelSessionModal'
 import {
   useSeekerSessions,
   useGuideSessions,
@@ -33,6 +34,7 @@ export function SessionsPage() {
 
   const [tab, setTab] = useState<Tab>(initialTab)
   const [search, setSearch] = useState('')
+  const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null)
 
   const seekerQuery = useSeekerSessions(!isGuide)
   const guideQuery = useGuideSessions(isGuide)
@@ -168,8 +170,19 @@ export function SessionsPage() {
                         </>
                       ) : session.status === 'CONFIRMED' || session.status === 'PENDING' ? (
                         <>
-                          <button className="rounded-lg border border-border bg-surface px-4 py-2 text-xs font-medium text-text-primary transition-colors hover:bg-background">
-                            Reschedule
+                          <button
+                            onClick={() =>
+                              setCancelTarget({
+                                id: session.id,
+                                name: session.name,
+                                status: session.status,
+                                scheduledAt: session.scheduledAt,
+                                totalCost: session.totalCost,
+                              })
+                            }
+                            className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                          >
+                            Cancel
                           </button>
                           <button
                             onClick={() => openCall(session.id)}
@@ -212,6 +225,10 @@ export function SessionsPage() {
           </div>
         </div>
       </div>
+
+      {cancelTarget && (
+        <CancelSessionModal session={cancelTarget} onClose={() => setCancelTarget(null)} />
+      )}
     </div>
   )
 }

@@ -30,6 +30,32 @@ export function useDeclineSession() {
   })
 }
 
+export interface RefundInfo {
+  tier: 'pending_free' | 'free' | 'partial_50' | 'partial_25' | 'none'
+  refundCents: number
+  chargeCents: number
+  refundPct: number
+  label: string
+}
+
+export function useCancelSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await apiClient.post<{ sessionId: string; status: string; refund: RefundInfo }>(
+        `/sessions/${sessionId}/cancel`,
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seeker', 'sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['guide', 'sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'seeker'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'guide'] })
+    },
+  })
+}
+
 export type JoinSessionResponse =
   | { status: 'ok'; roomUrl: string; token: string; expiresAt: string; role: 'guide' | 'seeker' }
   | { status: 'too_early'; opensAt: string }
