@@ -111,6 +111,7 @@ export const dashboardService = {
             averageRating: g.averageRating,
             linkedinUrl: g.linkedinUrl,
             availability: (g.availability as Record<string, string[]> | null) ?? null,
+            timezone: g.timezone ?? null,
             education: g.education.map((e) => ({
               school: e.school,
               degree: e.degree,

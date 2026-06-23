@@ -31,6 +31,7 @@ export interface OnboardingPayload {
   specializations: string[]
   sessionRate: number
   availability: Record<string, string[]>
+  timezone?: string
 }
 
 export const onboardingApi = {
@@ -49,8 +50,11 @@ export const onboardingApi = {
     return res.data
   },
 
-  async updateAvailability(availability: Record<string, string[]>): Promise<{ success: boolean }> {
-    const res = await apiClient.patch('/onboarding/availability', { availability })
+  async updateAvailability(
+    availability: Record<string, string[]>,
+    timezone?: string,
+  ): Promise<{ success: boolean }> {
+    const res = await apiClient.patch('/onboarding/availability', { availability, timezone })
     return res.data
   },
 }

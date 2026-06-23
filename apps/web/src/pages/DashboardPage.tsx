@@ -9,6 +9,7 @@ import { useAcceptSession, useDeclineSession, useOpenSessionCall } from '../hook
 import { onboardingApi } from '../services/onboardingService'
 import { useQueryClient } from '@tanstack/react-query'
 import { googleCalendarUrl } from '../lib/calendar'
+import { ALL_TIMEZONES, browserTimeZone, tzShortLabel } from '../lib/timezones'
 
 type DashboardRole = 'SEEKER' | 'GUIDE'
 
@@ -22,6 +23,7 @@ export function DashboardPage() {
   const [showAvailability, setShowAvailability] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [dayTimes, setDayTimes] = useState<Record<string, string[]>>({})
+  const [availabilityTz, setAvailabilityTz] = useState<string>(browserTimeZone())
   const [savingAvailability, setSavingAvailability] = useState(false)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
 
@@ -94,6 +96,7 @@ export function DashboardPage() {
       setSelectedDays([])
       setDayTimes({})
     }
+    setAvailabilityTz(myProfile?.guide?.timezone || browserTimeZone())
     setAvailabilityError(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAvailability])
@@ -108,7 +111,7 @@ export function DashboardPage() {
         const slots = dayTimes[day] ?? []
         if (slots.length > 0) payload[day] = slots
       }
-      await onboardingApi.updateAvailability(payload)
+      await onboardingApi.updateAvailability(payload, availabilityTz)
       // Refresh caches so booking page and dashboard see new availability
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['me', 'profile'] }),
@@ -338,9 +341,9 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={() => setShowAvailability(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/90"
           >
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-3.5 w-3.5" />
             Manage Availability
           </button>
         )}
@@ -794,6 +797,21 @@ export function DashboardPage() {
               >
                 <X className="h-4 w-4" />
               </button>
+            </div>
+
+            {/* Time zone */}
+            <div className="mb-5">
+              <label className="mb-1.5 block text-xs font-medium text-text-primary">Time zone</label>
+              <select
+                value={availabilityTz}
+                onChange={(e) => setAvailabilityTz(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+              >
+                {ALL_TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>{tz} ({tzShortLabel(tz)})</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-text-muted">Your slots below are defined in this time zone.</p>
             </div>
 
             {/* Day selector */}

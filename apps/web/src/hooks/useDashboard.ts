@@ -17,6 +17,7 @@ export interface MyProfileResponse {
     averageRating: number | null
     linkedinUrl: string | null
     availability: Record<string, string[]> | null
+    timezone: string | null
     education: { school: string; degree: string; major: string; startYear: number; endYear: number | null }[]
   } | null
 }

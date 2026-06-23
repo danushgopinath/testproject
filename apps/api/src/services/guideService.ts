@@ -116,6 +116,7 @@ export const guideService = {
       name: `${guide.user.firstName} ${guide.user.lastName}`,
       bio: guide.user.bio ?? null,
       availability: (guide.availability as Record<string, string[]> | null) ?? null,
+      timezone: guide.timezone ?? null,
       headline: guide.headline,
       currentRole: guide.currentRole,
       currentCompany: guide.currentCompany,

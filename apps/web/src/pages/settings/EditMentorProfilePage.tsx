@@ -15,6 +15,7 @@ interface GuideProfileResponse {
     resumeIsPublic: boolean
     sessionRate: number | null
     availability: Record<string, string[]> | null
+    timezone: string | null
     specializations: string[]
     education: {
       school: string
@@ -63,6 +64,7 @@ export function EditMentorProfilePage() {
           specializations: g.specializations,
           sessionRate: g.sessionRate ?? undefined,
           availability: g.availability ?? {},
+          timezone: g.timezone ?? undefined,
           education: g.education.map((e) => ({
             school: e.school,
             degree: e.degree,

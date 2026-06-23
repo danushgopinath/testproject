@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowRight, ArrowLeft, Upload, X, Check, Plus } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
 import { onboardingApi, type EducationInput, type ExperienceInput } from '../../services/onboardingService'
+import { ALL_TIMEZONES, browserTimeZone, tzShortLabel } from '../../lib/timezones'
 
 const STEP_LABELS = ['About', 'Bio & Resume', 'Education', 'Experience', 'Expertise & Schedule']
 
@@ -51,6 +52,7 @@ export interface MentorFormInitialValues {
   specializations?: string[]
   sessionRate?: number   // in cents (as stored in DB)
   availability?: Record<string, string[]>
+  timezone?: string
 }
 
 interface MentorOnboardingFormProps {
@@ -98,6 +100,7 @@ export function MentorOnboardingForm({ onComplete, mode = 'create', initial, sub
     initial?.sessionRate != null ? String(Math.round(initial.sessionRate / 100)) : '',
   )
   const [availability, setAvailability] = useState<Record<string, string[]>>(initial?.availability ?? {})
+  const [timezone, setTimezone] = useState<string>(initial?.timezone || browserTimeZone())
 
   // ── Education helpers ──
   const updateEdu = (i: number, patch: Partial<EducationInput>) =>
@@ -184,6 +187,7 @@ export function MentorOnboardingForm({ onComplete, mode = 'create', initial, sub
         specializations,
         sessionRate: Number(sessionRate),
         availability,
+        timezone,
       })
 
       onComplete()
@@ -628,6 +632,20 @@ export function MentorOnboardingForm({ onComplete, mode = 'create', initial, sub
                 placeholder="50"
                 min="0"
               />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-text-primary">Time Zone <span className="text-red-500">*</span></label>
+              <select
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+              >
+                {ALL_TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>{tz} ({tzShortLabel(tz)})</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-text-muted">Your availability below is in this time zone. Seekers see times converted to theirs.</p>
             </div>
 
             <div>

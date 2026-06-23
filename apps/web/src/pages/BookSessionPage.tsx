@@ -8,6 +8,7 @@ import {
 import { useGuide } from '../hooks/useGuides'
 import { useAuthStore } from '../stores/authStore'
 import { apiClient } from '../services/apiClient'
+import { browserTimeZone, zonedWallClockToUtc, formatDateTimeInTz, tzShortLabel } from '../lib/timezones'
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
@@ -62,6 +63,12 @@ export function BookSessionPage() {
   const user = useAuthStore((s) => s.user)
   const { data: guide, isLoading, isError } = useGuide(id)
 
+  // Availability + slots are defined in the mentor's timezone. The seeker books
+  // against the mentor's calendar; we compute the absolute instant in the
+  // mentor's tz and show the seeker their own local equivalent.
+  const mentorTz = guide?.timezone || browserTimeZone()
+  const viewerTz = browserTimeZone()
+
   // Stepper
   const [step, setStep] = useState(0)
 
@@ -102,9 +109,9 @@ export function BookSessionPage() {
   const scheduledAtISO = useMemo(() => {
     if (!selectedDay || !selectedSlot) return null
     const [h, m] = selectedSlot.split(':').map(Number)
-    const d = new Date(calYear, calMonth, selectedDay, h, m)
-    return d.toISOString()
-  }, [calYear, calMonth, selectedDay, selectedSlot])
+    // The slot is a wall-clock time in the mentor's timezone.
+    return zonedWallClockToUtc(calYear, calMonth, selectedDay, h, m, mentorTz).toISOString()
+  }, [calYear, calMonth, selectedDay, selectedSlot, mentorTz])
 
   // Calendar
   const daysInMonth = getDaysInMonth(calYear, calMonth)
@@ -175,7 +182,7 @@ export function BookSessionPage() {
   const displaySlots = selectedDay
     ? rawSlots.filter((s) => {
         const [h, m] = s.split(':').map(Number)
-        const slotDate = new Date(calYear, calMonth, selectedDay, h, m)
+        const slotDate = zonedWallClockToUtc(calYear, calMonth, selectedDay, h, m, mentorTz)
         return slotDate.getTime() >= Date.now() + MIN_LEAD_MS
       })
     : rawSlots
@@ -424,10 +431,13 @@ export function BookSessionPage() {
         </div>
 
         {availability && Object.keys(availability).length > 0 && (
-          <p className="mb-4 text-xs text-[#070738]/50">
+          <p className="mb-1 text-xs text-[#070738]/50">
             Available days: {Object.keys(availability).join(', ')}
           </p>
         )}
+        <p className="mb-4 text-xs text-[#070738]/50">
+          Times shown in the mentor's time zone: <span className="font-medium text-[#070738]/70">{mentorTz} ({tzShortLabel(mentorTz)})</span>
+        </p>
 
         {/* Time Slots */}
         {selectedDay && (
@@ -453,6 +463,11 @@ export function BookSessionPage() {
                   </button>
                 ))}
               </div>
+            )}
+            {selectedSlot && scheduledAtISO && mentorTz !== viewerTz && (
+              <p className="mb-5 -mt-2 text-xs text-[#070738]/60">
+                In your time zone ({tzShortLabel(viewerTz)}): <span className="font-medium text-[#070738]">{formatDateTimeInTz(new Date(scheduledAtISO), viewerTz)}</span>
+              </p>
             )}
           </>
         )}

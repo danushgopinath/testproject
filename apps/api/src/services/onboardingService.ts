@@ -32,6 +32,7 @@ interface OnboardingInput {
   specializations: string[]
   sessionRate: number
   availability: Record<string, string[]>
+  timezone?: string
 }
 
 export const onboardingService = {
@@ -68,6 +69,7 @@ export const onboardingService = {
         specializations: data.specializations,
         sessionRate: data.sessionRate * 100, // store in cents
         availability: data.availability,
+        timezone: data.timezone || null,
         isApproved: true,
       },
       update: {
@@ -83,6 +85,7 @@ export const onboardingService = {
         specializations: data.specializations,
         sessionRate: data.sessionRate * 100,
         availability: data.availability,
+        timezone: data.timezone || null,
       },
     })
 
@@ -143,7 +146,11 @@ export const onboardingService = {
     return { isComplete: profile !== null }
   },
 
-  async updateAvailability(userId: string, availability: Record<string, string[]>) {
+  async updateAvailability(
+    userId: string,
+    availability: Record<string, string[]>,
+    timezone?: string,
+  ) {
     const profile = await prisma.guideProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -151,7 +158,7 @@ export const onboardingService = {
     if (!profile) throw new Error('Guide profile not found')
     await prisma.guideProfile.update({
       where: { userId },
-      data: { availability },
+      data: { availability, ...(timezone !== undefined ? { timezone: timezone || null } : {}) },
     })
     return { success: true }
   },

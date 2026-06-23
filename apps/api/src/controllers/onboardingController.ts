@@ -35,6 +35,7 @@ export async function updateAvailability(req: AuthenticatedRequest, res: Respons
   if (!availability || typeof availability !== 'object') {
     throw new AppError('availability is required', 400)
   }
-  const result = await onboardingService.updateAvailability(userId, availability)
+  const timezone = typeof req.body?.timezone === 'string' ? req.body.timezone : undefined
+  const result = await onboardingService.updateAvailability(userId, availability, timezone)
   res.json(result)
 }
