@@ -1,10 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { Mail, MessageSquare, Users } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 
 const contacts = [
-  { icon: Mail, label: 'General enquiries', email: 'hello@expertify.io' },
   { icon: MessageSquare, label: 'Support', email: 'support@expertify.io' },
-  { icon: Users, label: 'Partnerships', email: 'partners@expertify.io' },
 ]
 
 export function ContactPage() {

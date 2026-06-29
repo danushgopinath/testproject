@@ -140,7 +140,7 @@ export function TermsOfServicePage() {
           <S title="13. Contact">
             <P>Questions about these Terms?</P>
             <address className="not-italic text-sm text-[#5B6B85]">
-              <p>Expertify — <a href="mailto:legal@expertify.io" className="text-primary hover:underline">legal@expertify.io</a></p>
+              <p>Expertify — <a href="mailto:support@expertify.io" className="text-primary hover:underline">support@expertify.io</a></p>
             </address>
           </S>
 

@@ -131,7 +131,7 @@ export function CookiePolicyPage() {
           <S title="7. Contact">
             <P>Questions about cookies or this policy?</P>
             <address className="not-italic text-sm text-[#5B6B85]">
-              <p>Expertify — <a href="mailto:privacy@expertify.io" className="text-primary hover:underline">privacy@expertify.io</a></p>
+              <p>Expertify — <a href="mailto:support@expertify.io" className="text-primary hover:underline">support@expertify.io</a></p>
             </address>
           </S>
 

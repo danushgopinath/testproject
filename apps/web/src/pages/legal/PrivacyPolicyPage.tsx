@@ -83,14 +83,14 @@ export function PrivacyPolicyPage() {
             <Li><B>Deletion:</B> Delete your account and all associated data via Settings → Delete Account.</Li>
             <Li><B>Portability:</B> Request your data in a machine-readable format.</Li>
             <Li><B>Opt-out:</B> Unsubscribe from marketing emails at any time via Settings → Email &amp; Notifications.</Li>
-            <P>To exercise any of these rights, contact us at <a href="mailto:privacy@expertify.io" className="text-primary hover:underline">privacy@expertify.io</a>.</P>
+            <P>To exercise any of these rights, contact us at <a href="mailto:support@expertify.io" className="text-primary hover:underline">support@expertify.io</a>.</P>
           </S>
 
           <S title="6. Security">
             <P>
               We implement industry-standard security measures including HTTPS encryption in transit, hashed passwords
               (bcrypt), and access controls for our database. No method of transmission over the internet is 100%
-              secure. Notify us immediately at <a href="mailto:security@expertify.io" className="text-primary hover:underline">security@expertify.io</a> if you suspect unauthorized access.
+              secure. Notify us immediately at <a href="mailto:support@expertify.io" className="text-primary hover:underline">support@expertify.io</a> if you suspect unauthorized access.
             </P>
           </S>
 
@@ -111,7 +111,7 @@ export function PrivacyPolicyPage() {
           <S title="9. Contact">
             <P>Questions about this Privacy Policy?</P>
             <address className="not-italic text-sm text-[#5B6B85]">
-              <p>Expertify — <a href="mailto:privacy@expertify.io" className="text-primary hover:underline">privacy@expertify.io</a></p>
+              <p>Expertify — <a href="mailto:support@expertify.io" className="text-primary hover:underline">support@expertify.io</a></p>
             </address>
           </S>
 
