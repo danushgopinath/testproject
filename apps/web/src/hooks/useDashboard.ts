@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../services/apiClient'
+import { useAuthStore } from '../stores/authStore'
 
 export interface MyProfileResponse {
   id: string
@@ -23,7 +24,9 @@ export interface MyProfileResponse {
 }
 
 export function useMyProfile() {
+  const token = useAuthStore((s) => s.accessToken)
   return useQuery({
+    enabled: !!token,
     queryKey: ['me', 'profile'],
     queryFn: async () => {
       const res = await apiClient.get<MyProfileResponse>('/dashboard/me/profile')
@@ -40,7 +43,9 @@ export interface NotificationsResponse {
 }
 
 export function useNotifications() {
+  const token = useAuthStore((s) => s.accessToken)
   return useQuery({
+    enabled: !!token,
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await apiClient.get<NotificationsResponse>('/dashboard/notifications')
