@@ -26,7 +26,7 @@ import { CookiePolicyPage } from './pages/legal/CookiePolicyPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BookSessionPage } from './pages/BookSessionPage'
 import { AboutPage } from './pages/AboutPage'
-import { TeamPage } from './pages/TeamPage'
+// import { TeamPage } from './pages/TeamPage' // Hidden — ships in a future build
 import { ContactPage } from './pages/ContactPage'
 import { RequestsPage } from './pages/RequestsPage'
 import { SeekerRequestsPage } from './pages/SeekerRequestsPage'
@@ -102,7 +102,7 @@ export function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/team" element={<TeamPage />} />
+        {/* <Route path="/team" element={<TeamPage />} /> */} {/* Hidden — ships in a future build */}
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />

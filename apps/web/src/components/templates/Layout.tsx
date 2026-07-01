@@ -234,7 +234,7 @@ export function Layout({ children }: LayoutProps) {
   const navLinks = [
     { label: 'About', to: '/about' },
     { label: 'Find Mentors', to: '/guides' },
-    { label: 'Team', to: '/team' },
+    // { label: 'Team', to: '/team' }, // Hidden — Team page ships in a future build
     { label: 'Contact', to: '/contact' },
   ]
 
@@ -585,7 +585,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#070738]">Company</p>
                 <ul className="space-y-3">
-                  {[{ label: 'About Us', to: '/about' }, { label: 'Team', to: '/team' }, { label: 'Contact', to: '/contact' }].map(({ label, to }) => (
+                  {[{ label: 'About Us', to: '/about' }, /* { label: 'Team', to: '/team' }, */ { label: 'Contact', to: '/contact' }].map(({ label, to }) => (
                     <li key={label}><Link to={to} className="text-sm text-[#5B6B85] hover:text-[#070738] transition-colors">{label}</Link></li>
                   ))}
                 </ul>
