@@ -10,8 +10,80 @@ function createTransporter() {
       auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
     })
   }
-  // Ethereal test account fallback — only in dev
+  // SMTP not configured — skip sending silently (dev)
   return null
+}
+
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
+function fmtDate(d: Date): string {
+  return d.toLocaleString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+  })
+}
+
+// A key/value detail card. Uses a table (email-safe) — NOT flexbox, which Gmail
+// and Outlook strip, causing labels and values to collapse together.
+function detailsCard(rows: { label: string; value: string }[]): string {
+  const cells = rows
+    .map((r, i) => {
+      const border = i < rows.length - 1 ? 'border-bottom:1px solid rgba(7,7,56,.07);' : ''
+      return `<tr>
+        <td align="left" style="padding:11px 0;${border}color:rgba(7,7,56,.55);font-size:14px;padding-right:16px;vertical-align:top;">${r.label}</td>
+        <td align="right" style="padding:11px 0;${border}color:#070738;font-size:14px;font-weight:600;text-align:right;vertical-align:top;">${r.value}</td>
+      </tr>`
+    })
+    .join('')
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fc;border-radius:12px;margin:0 0 20px;">
+    <tr><td style="padding:6px 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cells}</table>
+    </td></tr>
+  </table>`
+}
+
+function note(text: string): string {
+  return `<p style="font-size:13px;color:rgba(7,7,56,.6);text-align:center;line-height:1.55;margin:0;">${text}</p>`
+}
+
+// Full responsive, table-based email shell.
+function layout(opts: {
+  preheader: string
+  icon: string
+  iconBg: string
+  heading: string
+  sub: string
+  content: string
+}): string {
+  const year = new Date().getFullYear()
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f5f7fc;font-family:${FONT};">
+<span style="display:none;max-height:0;overflow:hidden;opacity:0;">${opts.preheader}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fc;padding:32px 12px;">
+  <tr><td align="center">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid rgba(7,7,56,.08);">
+      <tr><td style="background:#070738;padding:28px 32px;text-align:center;">
+        <div style="color:#F5B400;font-size:22px;font-weight:700;letter-spacing:.3px;">Expertify</div>
+        <div style="color:rgba(255,255,255,.7);font-size:13px;margin-top:6px;">Peer Mentorship Platform</div>
+      </td></tr>
+      <tr><td style="padding:30px 32px 28px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+          <div style="width:56px;height:56px;line-height:56px;background:${opts.iconBg};border-radius:50%;font-size:26px;text-align:center;">${opts.icon}</div>
+        </td></tr></table>
+        <h2 style="text-align:center;color:#070738;font-size:20px;font-weight:700;margin:18px 0 8px;">${opts.heading}</h2>
+        <p style="text-align:center;color:rgba(7,7,56,.55);font-size:14px;line-height:1.55;margin:0 0 24px;">${opts.sub}</p>
+        ${opts.content}
+      </td></tr>
+      <tr><td style="text-align:center;padding:18px 32px;color:rgba(7,7,56,.4);font-size:12px;border-top:1px solid rgba(7,7,56,.06);">© ${year} Expertify · All rights reserved</td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`
+}
+
+function fromAddress(): string {
+  return env.SMTP_USER ?? env.SMTP_FROM_EMAIL ?? 'noreply@expertify.io'
 }
 
 export async function sendBookingPlacedEmail(opts: {
@@ -26,55 +98,26 @@ export async function sendBookingPlacedEmail(opts: {
   const transporter = createTransporter()
   if (!transporter) return
 
-  const dateStr = opts.scheduledAt.toLocaleString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-  })
-  const from = env.SMTP_USER ?? 'noreply@expertify.io'
-
   await transporter.sendMail({
-    from: `"Expertify" <${from}>`,
+    from: `"Expertify" <${fromAddress()}>`,
     to: opts.to,
     subject: `Booking request sent to ${opts.guideName}`,
-    html: `
-<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fc;margin:0;padding:0;}
-.wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(7,7,56,.08);}
-.header{background:#070738;padding:32px 32px 24px;text-align:center;}
-.header h1{color:#F5B400;margin:0;font-size:22px;}
-.header p{color:rgba(255,255,255,.7);margin:6px 0 0;font-size:14px;}
-.body{padding:28px 32px;}
-.icon{width:52px;height:52px;background:#fef3c7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;}
-h2{text-align:center;color:#070738;font-size:20px;margin:0 0 6px;}
-.sub{text-align:center;color:rgba(7,7,56,.55);font-size:14px;margin:0 0 24px;}
-.details{background:#f5f7fc;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
-.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(7,7,56,.06);font-size:14px;}
-.row:last-child{border-bottom:none;}
-.label{color:rgba(7,7,56,.55);}
-.value{font-weight:600;color:#070738;}
-.footer{text-align:center;padding:20px 32px;color:rgba(7,7,56,.4);font-size:12px;border-top:1px solid rgba(7,7,56,.06);}
-</style></head><body>
-<div class="wrap">
-  <div class="header"><h1>Expertify</h1><p>Peer Mentorship Platform</p></div>
-  <div class="body">
-    <div class="icon">⏳</div>
-    <h2>Booking Request Sent</h2>
-    <p class="sub">Hi ${opts.seekerName}, we've sent your session request to ${opts.guideName}. They'll respond shortly.</p>
-    <div class="details">
-      <div class="row"><span class="label">Mentor</span><span class="value">${opts.guideName}</span></div>
-      <div class="row"><span class="label">Date &amp; Time</span><span class="value">${dateStr}</span></div>
-      <div class="row"><span class="label">Duration</span><span class="value">${opts.durationMinutes} minutes</span></div>
-      <div class="row"><span class="label">Session Type</span><span class="value">${opts.sessionType}</span></div>
-      <div class="row"><span class="label">Total</span><span class="value">$${opts.totalCost.toFixed(2)}</span></div>
-    </div>
-    <p style="font-size:13px;color:rgba(7,7,56,.6);text-align:center;">
-      Your booking is <strong>pending mentor approval</strong>. You'll receive an email and notification once they accept or decline.
-    </p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} Expertify · All rights reserved</div>
-</div>
-</body></html>`,
+    html: layout({
+      preheader: `Your request to ${opts.guideName} is pending approval.`,
+      icon: '⏳',
+      iconBg: '#fef3c7',
+      heading: 'Booking Request Sent',
+      sub: `Hi ${opts.seekerName}, we've sent your session request to ${opts.guideName}. They'll respond shortly.`,
+      content:
+        detailsCard([
+          { label: 'Mentor', value: opts.guideName },
+          { label: 'Date & Time', value: fmtDate(opts.scheduledAt) },
+          { label: 'Duration', value: `${opts.durationMinutes} minutes` },
+          { label: 'Session Type', value: opts.sessionType },
+          { label: 'Total', value: `$${opts.totalCost.toFixed(2)}` },
+        ]) +
+        note(`Your booking is <strong>pending mentor approval</strong>. You'll receive an email and notification once they accept or decline.`),
+    }),
   })
 }
 
@@ -90,55 +133,26 @@ export async function sendSessionRequestEmail(opts: {
   const transporter = createTransporter()
   if (!transporter) return
 
-  const dateStr = opts.scheduledAt.toLocaleString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-  })
-  const from = env.SMTP_USER ?? 'noreply@expertify.io'
-
   await transporter.sendMail({
-    from: `"Expertify" <${from}>`,
+    from: `"Expertify" <${fromAddress()}>`,
     to: opts.to,
     subject: `New session request from ${opts.seekerName}`,
-    html: `
-<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fc;margin:0;padding:0;}
-.wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(7,7,56,.08);}
-.header{background:#070738;padding:32px 32px 24px;text-align:center;}
-.header h1{color:#F5B400;margin:0;font-size:22px;}
-.header p{color:rgba(255,255,255,.7);margin:6px 0 0;font-size:14px;}
-.body{padding:28px 32px;}
-.icon{width:52px;height:52px;background:#fef9ec;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;}
-h2{text-align:center;color:#070738;font-size:20px;margin:0 0 6px;}
-.sub{text-align:center;color:rgba(7,7,56,.55);font-size:14px;margin:0 0 24px;}
-.details{background:#f5f7fc;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
-.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(7,7,56,.06);font-size:14px;}
-.row:last-child{border-bottom:none;}
-.label{color:rgba(7,7,56,.55);}
-.value{font-weight:600;color:#070738;}
-.footer{text-align:center;padding:20px 32px;color:rgba(7,7,56,.4);font-size:12px;border-top:1px solid rgba(7,7,56,.06);}
-</style></head><body>
-<div class="wrap">
-  <div class="header"><h1>Expertify</h1><p>Peer Mentorship Platform</p></div>
-  <div class="body">
-    <div class="icon">📅</div>
-    <h2>New Session Request</h2>
-    <p class="sub">Hi ${opts.guideName}, you have a new session request from ${opts.seekerName}.</p>
-    <div class="details">
-      <div class="row"><span class="label">From</span><span class="value">${opts.seekerName}</span></div>
-      <div class="row"><span class="label">Date &amp; Time</span><span class="value">${dateStr}</span></div>
-      <div class="row"><span class="label">Duration</span><span class="value">${opts.durationMinutes} minutes</span></div>
-      <div class="row"><span class="label">Session Type</span><span class="value">${opts.sessionType}</span></div>
-      <div class="row"><span class="label">Total</span><span class="value">$${opts.totalCost.toFixed(2)}</span></div>
-    </div>
-    <p style="font-size:13px;color:rgba(7,7,56,.6);text-align:center;">
-      Log in to your Expertify dashboard to accept or decline this request.
-    </p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} Expertify · All rights reserved</div>
-</div>
-</body></html>`,
+    html: layout({
+      preheader: `${opts.seekerName} requested a session with you.`,
+      icon: '📅',
+      iconBg: '#fef9ec',
+      heading: 'New Session Request',
+      sub: `Hi ${opts.guideName}, you have a new session request from ${opts.seekerName}.`,
+      content:
+        detailsCard([
+          { label: 'From', value: opts.seekerName },
+          { label: 'Date & Time', value: fmtDate(opts.scheduledAt) },
+          { label: 'Duration', value: `${opts.durationMinutes} minutes` },
+          { label: 'Session Type', value: opts.sessionType },
+          { label: 'Total', value: `$${opts.totalCost.toFixed(2)}` },
+        ]) +
+        note(`Log in to your Expertify dashboard to accept or decline this request.`),
+    }),
   })
 }
 
@@ -151,43 +165,18 @@ export async function sendSessionDeclinedEmail(opts: {
   const transporter = createTransporter()
   if (!transporter) return
 
-  const dateStr = opts.scheduledAt.toLocaleString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-  })
-  const from = env.SMTP_USER ?? 'noreply@expertify.io'
-
   await transporter.sendMail({
-    from: `"Expertify" <${from}>`,
+    from: `"Expertify" <${fromAddress()}>`,
     to: opts.to,
     subject: `Update on your session request with ${opts.guideName}`,
-    html: `
-<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fc;margin:0;padding:0;}
-.wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(7,7,56,.08);}
-.header{background:#070738;padding:32px 32px 24px;text-align:center;}
-.header h1{color:#F5B400;margin:0;font-size:22px;}
-.header p{color:rgba(255,255,255,.7);margin:6px 0 0;font-size:14px;}
-.body{padding:28px 32px;}
-.icon{width:52px;height:52px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;}
-h2{text-align:center;color:#070738;font-size:20px;margin:0 0 6px;}
-.sub{text-align:center;color:rgba(7,7,56,.55);font-size:14px;margin:0 0 24px;}
-.footer{text-align:center;padding:20px 32px;color:rgba(7,7,56,.4);font-size:12px;border-top:1px solid rgba(7,7,56,.06);}
-</style></head><body>
-<div class="wrap">
-  <div class="header"><h1>Expertify</h1><p>Peer Mentorship Platform</p></div>
-  <div class="body">
-    <div class="icon">✕</div>
-    <h2>Session Not Available</h2>
-    <p class="sub">Hi ${opts.seekerName}, unfortunately ${opts.guideName} is unable to take your session request for ${dateStr}.</p>
-    <p style="font-size:13px;color:rgba(7,7,56,.6);text-align:center;">
-      Don't worry — browse other mentors and find a great fit for your goals!
-    </p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} Expertify · All rights reserved</div>
-</div>
-</body></html>`,
+    html: layout({
+      preheader: `${opts.guideName} couldn't take your session request.`,
+      icon: '✕',
+      iconBg: '#fee2e2',
+      heading: 'Session Not Available',
+      sub: `Hi ${opts.seekerName}, unfortunately ${opts.guideName} is unable to take your session request for ${fmtDate(opts.scheduledAt)}.`,
+      content: note(`Don't worry — browse other mentors and find a great fit for your goals!`),
+    }),
   })
 }
 
@@ -201,74 +190,27 @@ export async function sendSessionConfirmationEmail(opts: {
   totalCost: number
 }) {
   const transporter = createTransporter()
-  if (!transporter) return // SMTP not configured — skip silently
-
-  const dateStr = opts.scheduledAt.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
-
-  // Gmail requires the from address to match the authenticated account
-  const from = env.SMTP_USER ?? env.SMTP_FROM_EMAIL ?? 'noreply@expertify.io'
+  if (!transporter) return
 
   await transporter.sendMail({
-    from: `"Expertify" <${from}>`,
+    from: `"Expertify" <${fromAddress()}>`,
     to: opts.to,
     subject: `Your session with ${opts.guideName} is confirmed!`,
-    html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fc; margin: 0; padding: 0; }
-    .wrap { max-width: 560px; margin: 32px auto; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(7,7,56,.08); }
-    .header { background: #070738; padding: 32px 32px 24px; text-align: center; }
-    .header h1 { color: #F5B400; margin: 0; font-size: 22px; letter-spacing: .5px; }
-    .header p { color: rgba(255,255,255,.7); margin: 6px 0 0; font-size: 14px; }
-    .body { padding: 28px 32px; }
-    .check { width: 52px; height: 52px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
-    h2 { text-align: center; color: #070738; font-size: 20px; margin: 0 0 6px; }
-    .sub { text-align: center; color: rgba(7,7,56,.55); font-size: 14px; margin: 0 0 24px; }
-    .details { background: #f5f7fc; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
-    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(7,7,56,.06); font-size: 14px; }
-    .row:last-child { border-bottom: none; }
-    .label { color: rgba(7,7,56,.55); }
-    .value { font-weight: 600; color: #070738; }
-    .footer { text-align: center; padding: 20px 32px; color: rgba(7,7,56,.4); font-size: 12px; border-top: 1px solid rgba(7,7,56,.06); }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="header">
-      <h1>Expertify</h1>
-      <p>Peer Mentorship Platform</p>
-    </div>
-    <div class="body">
-      <div class="check">✓</div>
-      <h2>Booking Confirmed!</h2>
-      <p class="sub">Hi ${opts.seekerName}, your session has been successfully booked.</p>
-      <div class="details">
-        <div class="row"><span class="label">Mentor</span><span class="value">${opts.guideName}</span></div>
-        <div class="row"><span class="label">Date &amp; Time</span><span class="value">${dateStr}</span></div>
-        <div class="row"><span class="label">Duration</span><span class="value">${opts.durationMinutes} minutes</span></div>
-        <div class="row"><span class="label">Session Type</span><span class="value">${opts.sessionType}</span></div>
-        <div class="row"><span class="label">Total Paid</span><span class="value">$${opts.totalCost.toFixed(2)}</span></div>
-      </div>
-      <p style="font-size:13px;color:rgba(7,7,56,.6);text-align:center;">
-        You will receive a video call link 30 minutes before your session starts.<br/>
-        Free cancellation up to 24 hours before the session.
-      </p>
-    </div>
-    <div class="footer">© ${new Date().getFullYear()} Expertify · All rights reserved</div>
-  </div>
-</body>
-</html>
-    `,
+    html: layout({
+      preheader: `Your session with ${opts.guideName} is confirmed.`,
+      icon: '✓',
+      iconBg: '#dcfce7',
+      heading: 'Booking Confirmed!',
+      sub: `Hi ${opts.seekerName}, your session has been successfully booked.`,
+      content:
+        detailsCard([
+          { label: 'Mentor', value: opts.guideName },
+          { label: 'Date & Time', value: fmtDate(opts.scheduledAt) },
+          { label: 'Duration', value: `${opts.durationMinutes} minutes` },
+          { label: 'Session Type', value: opts.sessionType },
+          { label: 'Total Paid', value: `$${opts.totalCost.toFixed(2)}` },
+        ]) +
+        note(`You'll receive a video call link before your session starts.<br/>Free cancellation up to 24 hours before the session.`),
+    }),
   })
 }
