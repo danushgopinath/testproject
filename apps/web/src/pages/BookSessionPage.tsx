@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Clock, Globe, Star,
@@ -71,6 +71,12 @@ export function BookSessionPage() {
 
   // Stepper
   const [step, setStep] = useState(0)
+
+  // Scroll back to the top whenever the booking step changes, so each step
+  // starts at the header instead of wherever the previous step was scrolled.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
 
   // Step 1
   const today = new Date()
