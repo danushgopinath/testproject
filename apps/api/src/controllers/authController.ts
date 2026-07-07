@@ -63,6 +63,21 @@ export async function refresh(req: Request, res: Response) {
   res.status(200).json(result)
 }
 
+export async function forgotPassword(req: Request, res: Response) {
+  const { email } = req.body
+  if (!email || typeof email !== 'string') throw new AuthError('Email is required', 400)
+  const result = await authService.requestPasswordReset(email)
+  res.status(200).json(result)
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  const { token, password } = req.body
+  if (!token || typeof token !== 'string') throw new AuthError('Reset token is required', 400)
+  if (!password || typeof password !== 'string') throw new AuthError('Password is required', 400)
+  const result = await authService.resetPassword(token, password)
+  res.status(200).json(result)
+}
+
 export async function logout(_req: Request, res: Response) {
   const result = authService.logout(res)
   res.status(200).json(result)

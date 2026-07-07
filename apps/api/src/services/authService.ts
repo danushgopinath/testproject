@@ -7,6 +7,7 @@ import { AppError, AuthError, ValidationError } from '../utils/errors'
 import { env } from '../config/env'
 import { logger } from '../config/logger'
 import { getSignedUrl } from '../utils/s3'
+import { sendPasswordResetEmail } from '../utils/email'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -384,6 +385,52 @@ export const authService = {
     } catch {
       throw new AuthError('Invalid or expired refresh token', 401)
     }
+  },
+
+  // ── Password reset ───────────────────────────────────────
+  // Emails a reset link. Always resolves the same way regardless of whether
+  // the email exists (prevents account enumeration).
+  async requestPasswordReset(email: string) {
+    const parsed = z.string().email().safeParse(email)
+    if (!parsed.success) return { ok: true }
+
+    const user = await userRepository.findByEmail(parsed.data)
+    // Only email-based accounts can reset a password (OAuth accounts have none).
+    if (user && user.passwordHash) {
+      const token = jwt.sign({ sub: user.id, purpose: 'pw_reset' }, env.JWT_ACCESS_SECRET, {
+        expiresIn: '30m',
+      })
+      const resetUrl = `${env.CORS_ORIGIN}/auth/reset-password?token=${encodeURIComponent(token)}`
+      sendPasswordResetEmail({
+        to: user.email,
+        name: user.firstName || 'there',
+        resetUrl,
+      }).catch((err: unknown) => logger.error('Failed to send reset email', { err }))
+    }
+    return { ok: true }
+  },
+
+  async resetPassword(token: string, newPassword: string) {
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      throw new ValidationError('Password must be at least 8 characters')
+    }
+
+    let payload: { sub?: string; purpose?: string }
+    try {
+      payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as { sub?: string; purpose?: string }
+    } catch {
+      throw new AuthError('This reset link is invalid or has expired', 400)
+    }
+    if (payload.purpose !== 'pw_reset' || !payload.sub) {
+      throw new AuthError('This reset link is invalid or has expired', 400)
+    }
+
+    const user = await userRepository.findById(payload.sub)
+    if (!user) throw new AuthError('This reset link is invalid or has expired', 400)
+
+    const passwordHash = await bcrypt.hash(newPassword, 12)
+    await userRepository.updatePassword(user.id, passwordHash)
+    return { ok: true }
   },
 
   // ── Logout ───────────────────────────────────────────────

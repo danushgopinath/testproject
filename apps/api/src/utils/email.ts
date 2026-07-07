@@ -86,6 +86,35 @@ function fromAddress(): string {
   return env.SMTP_USER ?? env.SMTP_FROM_EMAIL ?? 'noreply@expertify.io'
 }
 
+export async function sendPasswordResetEmail(opts: {
+  to: string
+  name: string
+  resetUrl: string
+}) {
+  const transporter = createTransporter()
+  if (!transporter) return
+
+  const button = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 20px;"><tr><td style="border-radius:10px;background:#070738;">
+    <a href="${opts.resetUrl}" style="display:inline-block;padding:12px 26px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">Reset password</a>
+  </td></tr></table>`
+
+  await transporter.sendMail({
+    from: `"Expertify" <${fromAddress()}>`,
+    to: opts.to,
+    subject: 'Reset your Expertify password',
+    html: layout({
+      preheader: 'Reset your password — this link expires in 30 minutes.',
+      icon: '🔒',
+      iconBg: '#e0e7ff',
+      heading: 'Reset your password',
+      sub: `Hi ${opts.name}, we received a request to reset your password. This link expires in 30 minutes.`,
+      content:
+        button +
+        note(`If you didn't request this, you can safely ignore this email — your password won't change.<br/><br/>Button not working? Paste this link into your browser:<br/><span style="word-break:break-all;color:#070738;">${opts.resetUrl}</span>`),
+    }),
+  })
+}
+
 export async function sendBookingPlacedEmail(opts: {
   to: string
   seekerName: string

@@ -163,6 +163,10 @@ model Session {
   review          Review?
   messages        Message[]
   call            SessionCall?
+
+  @@index([seekerId, status])
+  @@index([guideId, status])
+  @@index([status, scheduledAt])
 }
 
 model SessionCall {
@@ -203,6 +207,10 @@ model Message {
   sender     User     @relation("SentMessages", fields: [senderId], references: [id])
   receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
   session    Session? @relation(fields: [sessionId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId, isRead])
+  @@index([sessionId])
 }
 
 enum UserRole {

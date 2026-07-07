@@ -6,6 +6,9 @@ import { GuidesPage } from './pages/GuidesPage'
 import { GuideProfilePage } from './pages/GuideProfilePage'
 import { LoginPage } from './pages/auth/LoginPage'
 import { SignupPage } from './pages/auth/SignupPage'
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import { LinkedInCallbackPage } from './pages/auth/LinkedInCallbackPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { MessagesPage } from './pages/MessagesPage'
@@ -112,6 +115,8 @@ export function App() {
         {/* Auth routes — redirect to dashboard if already logged in */}
         <Route path="/auth/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/auth/signup" element={<GuestRoute><SignupPage /></GuestRoute>} />
+        <Route path="/auth/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/linkedin/callback" element={<LinkedInCallbackPage />} />
 
         {/* Protected routes */}
@@ -136,6 +141,7 @@ export function App() {
         <Route path="/settings/billing" element={<ProtectedRoute><BillingSettingsPage /></ProtectedRoute>} />
         <Route path="/settings/language" element={<ProtectedRoute><LanguageSettingsPage /></ProtectedRoute>} />
         <Route path="/settings/mentor" element={<ProtectedRoute><EditMentorProfilePage /></ProtectedRoute>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>
   )

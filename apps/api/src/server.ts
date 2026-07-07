@@ -1,5 +1,7 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import cookieParser from 'cookie-parser'
 import morgan from 'morgan'
 import { env } from './config/env'
@@ -17,6 +19,8 @@ import { reviewRoutes } from './routes/reviewRoutes'
 
 const app = express()
 
+app.set('trust proxy', 1) // behind Railway/Vercel proxy — needed for correct client IPs (rate limiting)
+app.use(helmet())
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
@@ -26,6 +30,19 @@ app.use(
 app.use(express.json({ limit: '20mb' }))
 app.use(cookieParser())
 app.use(morgan('dev'))
+
+// Global rate limit — defense-in-depth across the whole API. Sensitive auth
+// endpoints have their own tighter limiters in authRoutes.
+app.use(
+  '/api/',
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 'error', message: 'Too many requests, please slow down.' },
+  }),
+)
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ status: 'ok' })

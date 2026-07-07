@@ -57,4 +57,11 @@ export const userRepository = {
       data,
     })
   },
+
+  async updatePassword(id: string, passwordHash: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { passwordHash },
+    })
+  },
 }
