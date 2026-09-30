@@ -40,6 +40,14 @@ import { EarningsAnalyticsPage } from './pages/analytics/EarningsAnalyticsPage'
 import { StudentsAnalyticsPage } from './pages/analytics/StudentsAnalyticsPage'
 import { PerformanceAnalyticsPage } from './pages/analytics/PerformanceAnalyticsPage'
 import { useAuthStore } from './stores/authStore'
+import { useSmoothScroll } from './hooks/useSmoothScroll'
+
+// Marketing/content pages where momentum smooth-scroll is wanted (no nested
+// scroll containers to conflict with).
+const SMOOTH_SCROLL_ROUTES = new Set([
+  '/', '/about', '/how-it-works', '/contact',
+  '/privacy-policy', '/terms-of-service', '/cookie-policy',
+])
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isInitialized } = useAuthStore()
@@ -80,6 +88,8 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 export function App() {
   const { initialize } = useAuthStore()
   const location = useLocation()
+
+  useSmoothScroll(SMOOTH_SCROLL_ROUTES.has(location.pathname))
 
   useEffect(() => {
     initialize()

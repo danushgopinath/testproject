@@ -102,6 +102,31 @@ select:focus-visible {
   will-change: transform;
 }
 
+/* ── Lenis smooth scroll (marketing pages) ── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ── Respect reduced-motion: stop the infinite marquees/beams pulse ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll,
+  .animate-scroll-up,
+  .animate-marquee,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+}
+
 /* ── Canvas overlay pulse ── */
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.05; }

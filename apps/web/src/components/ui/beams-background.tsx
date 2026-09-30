@@ -56,7 +56,7 @@ export function BeamsBackground({
     const container = canvas.parentElement
 
     const updateSize = () => {
-      const dpr = window.devicePixelRatio || 1
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       const w = window.innerWidth
       const h = container ? container.scrollHeight : window.innerHeight
       canvas.width = w * dpr
@@ -104,10 +104,12 @@ export function BeamsBackground({
       ctx.restore()
     }
 
-    function animate() {
+    // Render one frame. The soft glow now comes from a cheap GPU/CSS blur on
+    // the canvas element (see style below) instead of an expensive per-frame
+    // canvas blur, which was the main cause of scroll jank.
+    function drawFrame() {
       if (!canvas || !ctx) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.filter = 'blur(35px)'
       const total = beamsRef.current.length
       beamsRef.current.forEach((beam, i) => {
         beam.y -= beam.speed
@@ -115,15 +117,41 @@ export function BeamsBackground({
         if (beam.y + beam.length < -100) resetBeam(beam, i, total)
         drawBeam(ctx, beam)
       })
+    }
+
+    function animate() {
+      drawFrame()
       frameRef.current = requestAnimationFrame(animate)
     }
 
-    animate()
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const start = () => {
+      if (!prefersReduced && frameRef.current === 0) animate()
+    }
+    const stop = () => {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current)
+        frameRef.current = 0
+      }
+    }
+
+    // Only animate while the hero is actually on screen — scrolling past it
+    // stops the loop and frees the main thread (keeps the rest of the page smooth).
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) start()
+      else stop()
+    })
+    if (container) io.observe(container)
+
+    if (prefersReduced) drawFrame() // single static frame, no loop
+    else animate()
 
     return () => {
       cancelAnimationFrame(rafId)
       window.removeEventListener('resize', updateSize)
-      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+      io.disconnect()
+      stop()
     }
   }, [intensity])
 
@@ -132,7 +160,7 @@ export function BeamsBackground({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 pointer-events-none"
-        style={{ filter: 'blur(15px)' }}
+        style={{ filter: 'blur(45px)' }}
       />
       <div className="absolute inset-0 bg-[#070738]/5 animate-pulse-slow pointer-events-none" />
       <div className="relative z-10">{children}</div>
