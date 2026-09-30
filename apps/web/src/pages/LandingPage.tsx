@@ -348,9 +348,9 @@ export function LandingPage() {
             maxHeight: '600px',
           }}
         >
-          <TestimonialsColumn testimonials={col1} duration={20} />
-          <TestimonialsColumn testimonials={col2} duration={25} className="hidden md:flex" />
-          <TestimonialsColumn testimonials={col3} duration={18} className="hidden lg:flex" />
+          <TestimonialsColumn testimonials={col1} duration={13} />
+          <TestimonialsColumn testimonials={col2} duration={16} className="hidden md:flex" />
+          <TestimonialsColumn testimonials={col3} duration={11} className="hidden lg:flex" />
         </div>
       </section>
 
